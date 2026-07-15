@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title> お出かけ予定 登録システム </title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <?!= include('css_styles'); ?>
+</head>
+
+<body class="bg-gray-950 font-sans text-gray-200 antialiased selection:bg-blue-500/30 overflow-x-hidden w-full h-full pb-32">
+
+  <!-- 🍞 固定ヘッダー -->
+  <div class="fixed top-0 left-0 w-full h-[72px] bg-gray-900/90 backdrop-blur-md border-b border-gray-800 z-50 shadow-sm flex items-center justify-between px-4">
+    <button id="nav-back-btn" class="hidden items-center justify-center w-10 h-10 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 active:scale-90 transition-transform">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+    </button>
+
+    <h1 id="nav-title" class="absolute left-1/2 transform -translate-x-1/2 text-xl font-extrabold text-white tracking-widest whitespace-nowrap">お出かけ一覧</h1>
+
+    <div class="w-24 flex justify-end absolute right-4">
+      <button id="nav-new-btn" onclick="goToFormScreen()" class="flex items-center justify-center gap-1 bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg font-bold text-sm shadow-md active:scale-95 transition-transform whitespace-nowrap">
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+        <span>新規作成</span>
+      </button>
+      <button id="nav-clear-btn" onclick="resetAll()" class="hidden items-center justify-center gap-1 bg-gray-800 hover:bg-red-900/50 text-gray-400 hover:text-red-400 px-3 py-1.5 rounded-lg font-bold text-xs border border-gray-700 active:scale-95 transition-all">
+        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+        <span>破棄</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 📺 メインコンテナ -->
+  <div id="main-wrapper" class="max-w-md mx-auto w-full relative mt-[72px] px-3 pb-6 flex-1 flex flex-col justify-start">
+
+    <!-- 🗂️ スクリーン1：Deck (一覧画面) -->
+    <div id="screen-deck" class="w-full flex-col mt-4 fade-in flex">
+      <div id="deck-list" class="flex flex-col gap-3"></div>
+    </div>
+
+    <!-- 📝 スクリーン2：Form (入力画面) -->
+    <div id="screen-form" class="w-full flex-col relative hidden mt-3">
+      
+      <!-- 🏷️ 【上部固定UI】 -->
+      <div id="top-ui-wrapper" class="absolute top-0 left-0 w-full z-40 transition-all duration-500 pointer-events-none" style="display: none;">
+        
+        <!-- 上部：目的地エリア -->
+        <div id="preview-dest-area" class="w-full bg-gray-900 border border-gray-700 shadow-xl rounded-2xl p-4 flex flex-col pointer-events-auto mb-3">
+          <div class="flex items-start gap-3">
+            <div id="preview-dest-icon" class="w-10 h-10 rounded-full bg-blue-900/50 border border-blue-500 text-blue-300 flex items-center justify-center shrink-0 mt-1 shadow-sm">
+               <svg viewBox="0 0 24 24" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            </div>
+            <div class="flex flex-col min-w-0 flex-1">
+              <span class="text-[10px] font-bold text-gray-500 mb-0.5">目的地</span>
+              <span id="preview-dest-name" class="text-xl font-black text-gray-100 leading-tight">未選択</span>
+            </div>
+          </div>
+          
+          <div class="mt-3 flex flex-col gap-2 border-t border-gray-700/50 pt-3">
+            <div class="flex items-start gap-2 text-sm text-gray-300">
+              <svg class="w-4 h-4 shrink-0 text-gray-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              <div class="flex flex-col">
+                <span id="preview-address" class="leading-snug">---</span>
+                <span id="preview-building" class="font-bold text-gray-400 mt-0.5" style="display: none;"></span>
+              </div>
+            </div>
+            <div class="flex items-start gap-2 text-sm text-blue-300">
+              <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+              <span id="preview-phone">---</span>
+            </div>
+            <div class="flex items-start gap-2 text-sm text-gray-300">
+              <svg class="w-4 h-4 shrink-0 text-yellow-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              <span id="preview-biz" class="leading-snug whitespace-pre-wrap">---</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 中部：バッジエリア -->
+        <div id="badge-area" class="w-full bg-gray-900/80 backdrop-blur-sm border border-gray-700 rounded-2xl p-2.5 shadow-lg flex justify-between items-center pointer-events-auto mb-3">
+          <div class="flex gap-2 items-center flex-wrap">
+            <div class="relative"><button id="badge-1" onclick="tapBadge(1)" class="badge-btn badge-wait" data-last-state="badge-wait"><svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg></button><div id="ok-1" class="mini-badge ok-mode" style="display:none;"></div></div>
+            <div class="w-1.5 h-px bg-gray-600/50"></div>
+            <div class="relative"><button id="badge-2" onclick="tapBadge(2)" class="badge-btn badge-wait" data-last-state="badge-wait"><svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></button><div id="ok-2" class="mini-badge ok-mode" style="display:none;"></div></div>
+            <div class="w-1.5 h-px bg-gray-600/50"></div>
+            <div class="relative"><button id="badge-3" onclick="tapBadge(3)" class="badge-btn badge-wait" data-last-state="badge-wait"><svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button><div id="ok-3" class="mini-badge ok-mode" style="display:none;"></div></div>
+            <div class="w-1.5 h-px bg-gray-600/50"></div>
+            <div class="relative"><button id="badge-4" onclick="tapBadge(4)" class="badge-btn badge-wait" data-last-state="badge-wait"><svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button><div id="ok-4" class="mini-badge ok-mode" style="display:none;"></div></div>
+            <div class="relative ml-2"><button id="badge-route" onclick="tapBadge(5)" class="badge-btn badge-wait" data-last-state="badge-wait"><svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg></button><div id="ok-route" class="mini-badge ok-mode" style="display:none;"></div></div>
+            <div class="relative ml-2"><button id="badge-weather" onclick="tapBadge('weather')" class="badge-btn badge-wait" data-completed="false" data-last-state="badge-wait"><svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg></button><div id="ok-weather" class="mini-badge ok-mode" style="display:none;"></div></div>
+            <div class="relative ml-2"><button id="badge-confirm" onclick="tapBadge(6)" class="badge-btn badge-wait" data-last-state="badge-wait"><svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg></button><div id="ok-confirm" class="mini-badge ok-mode" style="display:none;"></div></div>
+          </div>
+          <div class="pl-2 border-l border-gray-700 ml-1">
+            <button id="badge-cancel" onclick="cancelAllEdits()" class="badge-btn badge-wait shrink-0 w-8 h-8 bg-gray-800 text-gray-500 border border-gray-700" disabled data-last-state="inactive">
+               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- 中部：時系列エリア -->
+        <div id="timeline-area" class="w-full bg-gray-900 border border-gray-700 rounded-2xl p-4 shadow-xl pointer-events-auto">
+           <div class="flex items-center justify-between border-b border-gray-700/50 pb-2 mb-3">
+              <span id="preview-header-date" class="text-gray-300 font-black text-sm tracking-wide flex items-center gap-1.5"><svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> 未定</span>
+              <div class="flex gap-2">
+                 <span id="preview-header-holiday-wrap" class="hidden items-center gap-1 text-[10px] text-red-400 font-bold bg-red-900/30 border border-red-500/30 px-1.5 py-0.5 rounded"></span>
+                 <span id="preview-header-seasonal-wrap" class="hidden items-center gap-1 text-[10px] text-yellow-400 font-bold bg-yellow-900/30 border border-yellow-500/30 px-1.5 py-0.5 rounded"></span>
+              </div>
+           </div>
+           <!-- JSで動的に五角形パネルが挿入されます -->
+           <div id="preview-timeline-container" class="mb-2"></div>
+        </div>
+      </div>
+      
+      <!-- ⌨️ 入力パネル群 -->
+      <div id="input-container" class="relative w-full z-10">
+
+        <!-- STEP 1 -->
+        <div id="step-1" class="step-panel bg-gray-900 border-2 border-gray-700 shadow-2xl rounded-2xl p-6 w-full flex-col flex" style="z-index: 20;">
+          <h2 class="text-blue-400 font-extrabold text-lg mb-4 flex items-center gap-2">
+            <span class="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span> 目的地
+          </h2>
+          <div class="flex bg-gray-800 p-1 rounded-xl mb-4 border border-gray-700 relative overflow-hidden shadow-inner">
+            <div id="tab-bg" class="absolute w-1/2 h-full bg-blue-600 rounded-lg top-0 left-0 transition-transform duration-300 z-0"></div>
+            <button id="tab-master-btn" class="flex-1 text-white font-bold py-3 text-lg rounded-lg z-10 transition-colors flex items-center justify-center gap-2" onclick="document.getElementById('tab-bg').style.transform='translateX(0)'; switchInnerTab('master')"></button>
+            <button id="tab-search-btn" class="flex-1 text-gray-400 font-bold py-3 text-lg rounded-lg z-10 transition-colors flex items-center justify-center gap-2" onclick="document.getElementById('tab-bg').style.transform='translateX(100%)'; switchInnerTab('search')"></button>
+          </div>
+
+          <div id="tab-master" class="inner-tab active flex flex-col gap-3">
+             <div class="relative w-full">
+               <select id="master-select" onchange="onMasterSelect()" class="w-full bg-gray-100 border-2 border-gray-400 rounded-2xl px-4 py-5 text-xl font-bold focus:outline-none focus:border-blue-500 appearance-none shadow-inner text-gray-900">
+                 <option value="">▼ 選んでください</option>
+               </select>
+               <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-600">
+                  <svg class="fill-current h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+               </div>
+             </div>
+             <div id="master-address-display" class="hidden text-xs text-gray-400 ml-2 border-l-2 border-gray-700 pl-2"></div>
+          </div>
+
+          <div id="tab-search" class="inner-tab hidden flex-col gap-3">
+             <input type="text" id="city-input" placeholder="市区町村 (例: 朝霞市)" onkeyup="debounceSearch(event)" class="w-full bg-gray-800 border border-gray-600 rounded-xl px-4 py-4 text-lg font-bold text-white focus:outline-none shadow-inner">
+             <input type="text" id="keyword-input" placeholder="施設名・キーワード" onkeyup="debounceSearch(event)" class="w-full bg-gray-100 border-2 border-blue-400 rounded-xl px-4 py-4 text-xl font-bold focus:outline-none shadow-inner text-gray-900">
+             <div id="results-panel" class="hidden mt-2 border-2 border-blue-500 rounded-xl bg-white max-h-60 overflow-y-auto shadow-2xl relative z-10 divide-y divide-gray-200">
+                <div id="candidates-list" class="flex flex-col text-gray-900"></div>
+             </div>
+          </div>
+          
+          <button id="btn-next-1" class="ok-btn mt-6 w-full flex items-center justify-center py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-extrabold text-xl shadow-lg active:scale-95 transition-transform" disabled>決定</button>
+        </div>
+
+        <!-- STEP 2: 日付 -->
+        <div id="step-2" class="step-panel bg-gray-900 border-2 border-gray-700 shadow-2xl rounded-2xl p-6 w-full flex-col hidden">
+          <h2 class="text-blue-400 font-extrabold text-lg mb-2 flex items-center gap-2"><span class="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span> 出発日</h2>
+          <div class="relative w-full mt-2">
+             <input type="date" id="date-input" onchange="updateDayInfoAndValidate()" class="w-full bg-gray-100 border-2 border-gray-400 rounded-2xl px-4 py-6 text-3xl font-black text-center focus:outline-none shadow-inner text-gray-900 cursor-pointer appearance-none">
+          </div>
+          <button id="btn-next-2" class="ok-btn mt-6 w-full flex items-center justify-center py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-extrabold text-xl shadow-lg active:scale-95 transition-transform" disabled>決定</button>
+        </div>
+
+        <!-- STEP 3: 時間 -->
+        <div id="step-3" class="step-panel bg-gray-900 border-2 border-gray-700 shadow-2xl rounded-2xl p-6 w-full flex-col hidden">
+          <h2 class="text-blue-400 font-extrabold text-lg mb-2 flex items-center gap-2"><span class="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">3</span> 宮戸橋 出発時刻</h2>
+          <div class="relative w-full mt-2">
+             <select id="bus-time-select" onchange="onBusTimeChange(this)" class="w-full bg-gray-100 border-2 border-gray-400 rounded-2xl px-4 py-5 text-3xl font-black focus:outline-none appearance-none text-center shadow-inner text-gray-900">
+               <option value="" style="color: #111827;">▼ 選択</option>
+             </select>
+             <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center"><svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+          </div>
+          <button id="btn-next-3" class="ok-btn mt-6 w-full flex items-center justify-center py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-extrabold text-xl shadow-lg active:scale-95 transition-transform" disabled>決定</button>
+        </div>
+
+        <!-- STEP 4: 滞在 -->
+        <div id="step-4" class="step-panel bg-gray-900 border-2 border-gray-700 shadow-2xl rounded-2xl p-6 w-full flex-col hidden">
+          <h2 class="text-blue-400 font-extrabold text-lg mb-2 flex items-center gap-2"><span class="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">4</span> 滞在時間</h2>
+          <input type="hidden" id="stay-select" value="">
+          <div class="grid grid-cols-2 gap-3 mt-2">
+             <button class="stay-btn bg-gray-800 text-gray-300 border-2 border-gray-600 font-bold text-lg py-4 rounded-xl active:scale-95 transition-all shadow-sm" onclick="setStayTime('1時間', this)">1時間</button>
+             <button class="stay-btn bg-gray-800 text-gray-300 border-2 border-gray-600 font-bold text-lg py-4 rounded-xl active:scale-95 transition-all shadow-sm" onclick="setStayTime('2時間', this)">2時間</button>
+             <button class="stay-btn bg-gray-800 text-gray-300 border-2 border-gray-600 font-bold text-lg py-4 rounded-xl active:scale-95 transition-all shadow-sm" onclick="setStayTime('3時間', this)">3時間</button>
+             <button class="stay-btn bg-gray-800 text-gray-300 border-2 border-gray-600 font-bold text-lg py-4 rounded-xl active:scale-95 transition-all shadow-sm" onclick="setStayTime('4時間', this)">4時間</button>
+          </div>
+          <button id="btn-next-4" class="ok-btn mt-6 w-full flex items-center justify-center py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-extrabold text-xl shadow-lg active:scale-95 transition-transform" disabled>決定</button>
+        </div>
+
+        <!-- STEP 5: ルート選択 -->
+        <div id="step-5" class="step-panel bg-gray-900 border-2 border-gray-700 shadow-2xl rounded-2xl p-6 w-full flex-col hidden">
+          <div class="flex justify-between items-center mb-2">
+             <h2 class="text-blue-400 font-extrabold text-lg flex items-center gap-2"><span class="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">5</span> ルート選択</h2>
+             <button onclick="startRouteSearch()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600 px-3 py-1.5 rounded-lg text-xs font-bold active:scale-95 transition-all">再検索</button>
+          </div>
+          <div id="route-candidates" class="flex flex-col gap-3 mt-2 min-h-[120px]"></div>
+          <button id="btn-next-route" class="ok-btn mt-6 w-full flex items-center justify-center py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-extrabold text-xl shadow-lg active:scale-95 transition-transform" disabled>決定</button>
+        </div>
+        
+        <!-- STEP Weather -->
+        <div id="step-weather" class="step-panel bg-gray-900 border-2 border-gray-700 shadow-2xl rounded-2xl p-6 w-full flex-col hidden">
+          <h2 class="text-blue-400 font-extrabold text-lg flex items-center gap-2 mb-4">🌤️ 現地の天気</h2>
+          <div id="weather-detail-content" class="flex gap-2 w-full justify-between mb-4"></div>
+          <button class="ok-btn mt-2 w-full flex items-center justify-center py-4 bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white rounded-2xl font-extrabold text-xl shadow-lg active:scale-95 transition-transform">閉じる</button>
+        </div>
+
+        <!-- STEP 6: 最終確認 -->
+        <div id="step-6" class="step-panel bg-gray-900 border-2 border-blue-600 shadow-blue-900/30 shadow-2xl rounded-2xl p-6 w-full flex-col hidden">
+          <h2 class="text-blue-400 font-extrabold text-xl mb-6 text-center">カレンダーに登録しますか？</h2>
+          <div class="relative w-full mb-6">
+             <select id="cal-account-select" class="w-full bg-gray-800 border-2 border-gray-600 rounded-xl px-4 py-4 text-lg font-bold text-white focus:outline-none appearance-none shadow-sm">
+                <option value="メイン">メインカレンダー (自分用)</option>
+                <option value="共有">家族共有カレンダー</option>
+             </select>
+             <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center"><svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div>
+          </div>
+          <button id="submit-btn" class="w-full py-5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-extrabold text-2xl shadow-lg active:scale-95 transition-all">送信</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-gray-800/95 backdrop-blur text-white px-6 py-3 rounded-full font-bold shadow-2xl z-[9999] pointer-events-none border border-gray-600 flex items-center gap-2"></div>
+ <?!= include('js_main'); ?>
+</body>
+</html>
