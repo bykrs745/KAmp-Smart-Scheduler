@@ -2,7 +2,7 @@
   /**
    * ==========================================
    * js_main.html (完全版・7:3せめぎ合い最適化)
-   * 🌟 1桁時間表示対応 / 縦型タイムライン / 決定ボタンバグの完全解消
+   * 🌟 日付曜日カラーチェンジ / 縦型タイムライン / コンソールバグ完全解消
    * ==========================================
    */
 
@@ -52,7 +52,7 @@
     return timeStr;
   }
 
-  // 🌟 SVGアイコン (自宅アイコンを Feather 完全パスに修正、バスをシンプル横向き・タイヤ対称・縦線排除・高さをアップ・運転席窓大・客席窓小に変更)
+  // 🌟 SVGアイコン (バス対称化・運転席窓大、紅茶ティーカップ、❌キャンセルアイコンの整備)
   function getSvgForIcon(type, cls) {
     var b = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="' + cls + '">';
     if(type==='bus') return b + '<rect x="2" y="3" width="20" height="13" rx="2.5"></rect><rect x="4" y="5.5" width="7" height="4.5" rx="0.5"></rect><rect x="13" y="5.5" width="3" height="4.5" rx="0.5"></rect><rect x="17" y="5.5" width="3" height="4.5" rx="0.5"></rect><circle cx="6" cy="18" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg>';
@@ -62,10 +62,11 @@
     if(type==='calendar') return b + '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';
     if(type==='map') return b + '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>';
     if(type==='list') return b + '<line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>';
-    if(type==='search') return b + '<circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>';
     if(type==='edit') return b + '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>';
     if(type==='trash') return b + '<polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
     if(type==='flag') return b + '<rect x="3" y="4" width="18" height="12" rx="1"></rect><circle cx="12" cy="10" r="3" fill="#ef4444" stroke="none"></circle><path d="M3 4v16"></path></svg>';
+    if(type==='cup') return b + '<path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="2" x2="6" y2="4"></line><line x1="10" y1="2" x2="10" y2="4"></line><line x1="14" y1="2" x2="14" y2="4"></line></svg>'; // 🍵 ティーカップ
+    if(type==='x') return b + '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>'; // ❌ キャンセル
     return '';
   }
 
@@ -77,24 +78,24 @@
     return b + '<circle cx="12" cy="12" r="5"></circle></svg>';
   }
 
-  // 🌟 天気ミニバッジ (天気を1段目、気温を2段目、右上はみ出し、輪郭に枠線)
+  // 🌟 天気ミニバッジ (2段構成、輪郭に枠線)
   function makeWeatherBadge(wStr, colorClass) {
     if(!wStr || wStr.trim() === "" || wStr === "---") return '';
     var parts = wStr.split(/\s+/);
     var icon = parts[0] || '🌤️';
     var temp = parts[1] || '--℃';
-    return '<div class="absolute top-[-10px] right-[28px] z-40 bg-gray-950 border-2 ' + (colorClass || 'border-amber-500/80') + ' rounded-lg py-1 px-1.5 flex flex-col items-center leading-none shadow-md shadow-black shrink-0">' +
+    return '<div class="absolute top-[-10px] right-[28px] z-40 bg-gray-950 border-2 ' + (colorClass || 'border-amber-400') + ' rounded-lg py-1 px-1.5 flex flex-col items-center leading-none shadow-md shadow-black shrink-0">' +
              '<span class="text-sm">' + icon + '</span>' +
              '<span class="text-[9px] font-black text-gray-200 mt-0.5">' + temp + '</span>' +
            '</div>';
   }
 
-  // 🌟 時系列五角形アンプ調タイムライン (フラット背景・縦文字サイズアップ・極小ハイライト配置)
+  // 🌟 時系列五角形アンプ調タイムライン (縦文字背景色＝枠線色、尖り白点削除)
   function getTimelinePanelHTML(startTime, busTime, arrTime, wStart, wBus, wArr) {
     var clipPoly = 'clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 50%, calc(100% - 16px) 100%, 0 100%);';
     var h = '<div class="flex mt-1.5 gap-[5px] w-full relative select-none">';
     
-    // 1. 出発 (お家 ⇨ 出発) - グラデーションOFF・縦文字を13pxへ大きく
+    // 1. 出発 (背景と枠色を一致) - 縦文字サイズ13px、z-index: 30
     h += '<div class="flex-1 relative h-[80px] z-30 shadow-[4px_0_10px_rgba(0,0,0,0.8)] bg-gray-500 rounded-l-xl p-[1.5px]">';
     h += makeWeatherBadge(wStart, 'border-gray-500'); 
     h +=   '<div class="w-full h-full flex items-stretch bg-gray-950 rounded-l-xl overflow-hidden">';
@@ -102,36 +103,34 @@
     h +=       getSvgForIcon('home', 'w-7 h-7 text-gray-400 mb-0.5');
     h +=       '<span class="font-black text-amber-400 text-lg tracking-tight leading-none">' + formatTimeNoZero(startTime) + '</span>';
     h +=     '</div>';
-    h +=     '<div class="w-[32px] bg-gray-700 flex items-center justify-center border-l border-gray-600 shadow-inner shrink-0">'; // グラデーションOFFのフラットな灰色
+    h +=     '<div class="w-[32px] bg-gray-500 flex items-center justify-center border-l border-gray-600 shadow-inner shrink-0">'; // 背景と枠色を完全一致
     h +=       '<span style="writing-mode:vertical-rl;text-orientation:upright;" class="text-[13px] font-black text-gray-900 tracking-widest mr-0.5">出 発</span>';
     h +=     '</div>';
     h +=   '</div>';
-    // 矢印先端の重なり三角形：斜め上辺ハイライトと極小の白い光点
+    // 重なり三角形 (白点は削除)
     h +=   '<div class="absolute top-0 right-[-14px] w-[15px] h-full z-40" style="clip-path: polygon(0 0, 100% 50%, 0 100%); background: #6b7280;">';
     h +=     '<div class="absolute inset-0 bg-white/20" style="clip-path: polygon(0 0, 100% 50%, 0 10%);"></div>';
-    h +=     '<div class="absolute w-[2px] h-[2px] bg-white rounded-full" style="top: 50%; left: calc(100% - 3px); transform: translateY(-50%);"></div>'; // 光の微細点
     h +=   '</div>';
     h += '</div>';
     
-    // 2. バス - 天気不要、グラデーションOFF
+    // 2. バス - 天気不要、背景色と枠色を一致、z-index: 20
     h += '<div class="flex-1 relative h-[80px] z-20 shadow-[4px_0_10px_rgba(0,0,0,0.8)] bg-blue-500 p-[1.5px]">';
     h +=   '<div class="w-full h-full flex items-stretch bg-gray-950 overflow-hidden">';
     h +=     '<div class="flex-1 flex flex-col items-center justify-center relative pr-4 pl-4">';
     h +=       getSvgForIcon('bus', 'w-8 h-8 text-blue-400 mb-0.5'); 
     h +=       '<span class="font-black text-blue-300 text-lg tracking-tight leading-none">' + formatTimeNoZero(busTime) + '</span>';
     h +=     '</div>';
-    h +=     '<div class="w-[32px] bg-blue-800 flex items-center justify-center border-l border-gray-600 shadow-inner shrink-0">'; // フラット青
+    h +=     '<div class="w-[32px] bg-blue-500 flex items-center justify-center border-l border-gray-600 shadow-inner shrink-0">'; // 背景と枠色を完全一致
     h +=       '<span style="writing-mode:vertical-rl;text-orientation:upright;" class="text-[13px] font-black text-gray-900 tracking-widest mr-0.5">バ ス</span>';
     h +=     '</div>';
     h +=   '</div>';
-    // 矢印先端の重なり三角形：斜め上辺ハイライトと極小の白い光点
+    // 重なり三角形 (白点は削除)
     h +=   '<div class="absolute top-0 right-[-14px] w-[15px] h-full z-40" style="clip-path: polygon(0 0, 100% 50%, 0 100%); background: #3b82f6;">';
     h +=     '<div class="absolute inset-0 bg-white/20" style="clip-path: polygon(0 0, 100% 50%, 0 10%);"></div>';
-    h +=     '<div class="absolute w-[2px] h-[2px] bg-white rounded-full" style="top: 50%; left: calc(100% - 3px); transform: translateY(-50%);"></div>';
     h +=   '</div>';
     h += '</div>';
     
-    // 3. 到着 - z-index: 10（最後尾、グラデーションOFF）
+    // 3. 到着 - 背景色と枠色を一致、z-index: 10
     h += '<div class="flex-1 relative h-[80px] z-10 shadow-[4px_0_10px_rgba(0,0,0,0.8)] bg-green-500 rounded-r-xl p-[1.5px]">';
     h += makeWeatherBadge(wArr, 'border-green-500'); 
     h +=   '<div class="w-full h-full flex items-stretch bg-gray-950 rounded-r-xl overflow-hidden">';
@@ -139,7 +138,7 @@
     h +=       getSvgForIcon('hospital', 'w-7 h-7 text-green-400 mb-0.5');
     h +=       '<span class="font-black text-green-400 text-lg tracking-tight leading-none">' + formatTimeNoZero(arrTime) + '</span>';
     h +=     '</div>';
-    h +=     '<div class="w-[32px] bg-green-800 flex items-center justify-center border-l border-gray-600 shadow-inner shrink-0">'; // フラット緑
+    h +=     '<div class="w-[32px] bg-green-500 flex items-center justify-center border-l border-gray-600 shadow-inner shrink-0">'; // 背景と枠色を完全一致
     h +=       '<span style="writing-mode:vertical-rl;text-orientation:upright;" class="text-[13px] font-black text-gray-900 tracking-widest mr-0.5">到 着</span>';
     h +=     '</div>';
     h +=   '</div>';
@@ -149,7 +148,7 @@
     return h;
   }
 
-  // 🌟 Form専用：縦型タイムライン (構成順：出発 ⇨ バス停 ⇨ 目的地 ⇨ 滞在 ⇨ 帰宅、天気は出発・目的地・帰宅の3箇所)
+  // 🌟 Form専用：縦型タイムライン
   function getVerticalTimelineHTML(startTime, busTime, arrTime, wStart, wBus, wArr, stayText, retTime, wRet) {
     var h = '<div class="flex flex-col gap-4 pl-2 w-full text-gray-200 select-none">';
     
@@ -164,7 +163,7 @@
     h +=   '<div class="absolute left-6 top-12 bottom-[-16px] w-[2px] bg-gray-800 z-0"></div>';
     h += '</div>';
 
-    // 2. バス停 (バス時刻)
+    // 2. バス停
     h += '<div class="flex items-center gap-4 relative">';
     h +=   '<div class="w-12 h-12 bg-gray-900 border-2 border-blue-500 rounded-full flex items-center justify-center shrink-0 shadow-lg z-10">' + getSvgForIcon('bus', 'w-6 h-6 text-blue-400') + '</div>';
     h +=   '<div class="flex-1 bg-gray-950 border border-gray-800 rounded-xl p-3 flex justify-between items-center shadow-md">';
@@ -192,7 +191,7 @@
     // 4. 滞在 (滞在時間)
     var sVal = stayText || "---";
     h += '<div class="flex items-center gap-4 relative">';
-    h +=   '<div class="w-12 h-12 bg-gray-900 border-2 border-purple-500 rounded-full flex items-center justify-center shrink-0 shadow-lg z-10">' + getSvgForIcon('clock', 'w-6 h-6 text-purple-400') + '</div>';
+    h +=   '<div class="w-12 h-12 bg-gray-900 border-2 border-purple-500 rounded-full flex items-center justify-center shrink-0 shadow-lg z-10">' + getSvgForIcon('cup', 'w-6 h-6 text-purple-400') + '</div>'; // ティーカップ
     h +=   '<div class="flex-1 bg-gray-950 border border-gray-800 rounded-xl p-3 flex justify-between items-center shadow-md">';
     h +=     '<span class="font-black text-xl text-purple-300">' + sVal + '</span>';
     h +=     '<span class="text-xs text-gray-400 font-bold bg-gray-900 px-2 py-1 rounded">滞在</span>';
@@ -230,13 +229,37 @@
     if (isFirstStepCompleted) setTimeout(function(){ adjustInputContainerY(); }, 50);
   }
 
+  // 🌟 【新規】カスタム確認モーダル制御（戻る・キャンセル時）
+  function handleBackAction() {
+    if (!isFirstStepCompleted) {
+      goToDeckScreen(); // STEP1入力前なら即戻る
+      return;
+    }
+    var modal = document.getElementById('confirm-modal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+  }
+
+  function closeConfirmModal(isConfirm) {
+    var modal = document.getElementById('confirm-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+    if (isConfirm) {
+      goToDeckScreen(); // 「はい」を選択した場合は破棄して戻る
+    }
+  }
+
   function goToFormScreen() {
     try {
       resetFormValues();
       var deck = document.getElementById('screen-deck'), form = document.getElementById('screen-form');
-      var backBtn = document.getElementById('nav-back-btn'), newBtn = document.getElementById('nav-new-btn'), clearBtn = document.getElementById('nav-clear-btn');
+      var backBtn = document.getElementById('nav-back-btn'), newBtn = document.getElementById('nav-new-btn');
       
-      // 目的地(STEP 1)入力中は、上部目的地情報、アコーディオン、バッジメーターをすべて完全に隠して罠の準備
+      // 目的地入力中は、上部プレビューやタイムライン、バッジを完全に隠して迷わせない
       var pDest = document.getElementById('preview-dest-area');
       var pTime = document.getElementById('timeline-area-wrapper');
       var pBadg = document.getElementById('badge-area');
@@ -244,7 +267,7 @@
       if (pTime) pTime.style.display = 'none';
       if (pBadg) pBadg.style.display = 'none';
 
-      // 入力エリアを画面中央・最上部に配置
+      // 入力エリアを最上部に配置
       var iC = document.getElementById('input-container');
       if (iC) {
         iC.style.position = 'relative';
@@ -259,7 +282,6 @@
           playAnimation(form, 'anim-scale-in', 300);
           if(backBtn) { backBtn.classList.remove('hidden'); backBtn.classList.add('flex'); }
           if(newBtn) newBtn.classList.add('hidden');
-          if(clearBtn) clearBtn.classList.remove('hidden');
           animateTitle("新規作成");
           var p1 = document.getElementById('step-1');
           if(p1){ resetPanelStyles(p1); p1.style.display='flex'; validateStep(); updateBadges(); switchInnerTab('master'); }
@@ -271,7 +293,7 @@
   function goToDeckScreen() {
     try {
       var deck = document.getElementById('screen-deck'), form = document.getElementById('screen-form');
-      var backBtn = document.getElementById('nav-back-btn'), newBtn = document.getElementById('nav-new-btn'), clearBtn = document.getElementById('nav-clear-btn');
+      var backBtn = document.getElementById('nav-back-btn'), newBtn = document.getElementById('nav-new-btn');
       
       if(deck && form) {
         playAnimation(form, 'anim-scale-out', 300, function(){
@@ -280,7 +302,6 @@
           playAnimation(deck, 'anim-scale-in', 300);
           if(backBtn) { backBtn.classList.add('hidden'); backBtn.classList.remove('flex'); }
           if(newBtn) newBtn.classList.remove('hidden');
-          if(clearBtn) clearBtn.classList.add('hidden');
           animateTitle("お出かけ一覧");
           loadDeckList();
         });
@@ -312,10 +333,19 @@
 
         gList.forEach(function(item) {
           var dateObj = new Date(item.date), dateStr = item.date, diffDays = null, dayOfWeek = "";
+          var dateColorClass = "text-white"; // 曜日のカラー制御（初期値平日：白色）
+          
           if (!isNaN(dateObj.getTime())) {
             dayOfWeek = jpDays[dateObj.getDay()];
             dateStr = dateObj.getFullYear() + "年" + (dateObj.getMonth() + 1) + "月" + dateObj.getDate() + "日 (" + dayOfWeek + ")";
             diffDays = Math.ceil((new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()).getTime() - today.getTime()) / 86400000);
+            
+            // 日祝日=赤色、土曜日=青色、平日=白色
+            if (dateObj.getDay() === 0 || item.holiday) {
+              dateColorClass = "text-red-400";
+            } else if (dateObj.getDay() === 6) {
+              dateColorClass = "text-blue-400";
+            }
           }
 
           var bHtml = '';
@@ -327,6 +357,7 @@
 
           h += '<div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 shadow-lg flex flex-col relative mt-3">' + bHtml;
           
+          // 目的地名と、右端の🗑️
           h += '<div class="flex justify-between items-center mb-2 gap-3">';
           h +=   '<h3 class="text-2xl font-black text-gray-100 leading-tight tracking-widest break-words flex-1">' + item.name + '</h3>';
           h +=   '<div class="flex shrink-0">';
@@ -334,8 +365,9 @@
           h +=   '</div>';
           h += '</div>';
           
+          // 住所表記を排除、曜日に応じたカラー表示
           h += '<div class="flex flex-col gap-1.5 mb-3.5">';
-          h +=   '<div class="flex items-center gap-1.5 text-lg font-black text-blue-400">' + getSvgForIcon('clock', 'w-5 h-5 shrink-0') + dateStr + '</div>';
+          h +=   '<div class="flex items-center gap-1.5 text-lg font-black ' + dateColorClass + '">' + getSvgForIcon('clock', 'w-5 h-5 shrink-0') + dateStr + '</div>';
           
           var hol = item.holiday ? '<div class="flex items-center gap-1 text-[10px] font-bold text-red-400 bg-red-950/40 px-1.5 py-0.5 rounded border border-red-900/30">' + getSvgForIcon('flag', 'w-3 h-3') + item.holiday + '</div>' : '';
           var sea = item.seasonal ? '<div class="flex items-center gap-1 text-[10px] font-bold text-yellow-400 bg-yellow-950/40 px-1.5 py-0.5 rounded border border-yellow-900/30">🌸 ' + item.seasonal + '</div>' : '';
@@ -364,7 +396,7 @@
     isDateDirty = false; isBusDirty = false; isRouteDirty = false; isConfirmDirty = false; isWeatherDirty = false; hasSubmitted = false; window.lastFetchedDate = null;
     window.previewWeatherStart = ""; window.previewWeatherArr = "";
     var k = document.getElementById('keyword-input'), d = document.getElementById('date-input'), b = document.getElementById('bus-time-select'), s = document.getElementById('stay-select');
-    if (k) k.value = ""; if (d) d.value = ""; if (b) b.innerHTML = '<option value="">▼ 選択</option>'; if (s) s.value = "";
+    if (k) k.value = ""; if (d) d.value = ""; if (b) { b.innerHTML = '<option value="">▼ 選択</option>'; b.className = b.className.replace(/text-[a-z]+-400/g, '').trim() + ' text-white'; } if (s) s.value = "";
     document.querySelectorAll('.step-panel').forEach(function(p){ resetPanelStyles(p); });
     var tUI = document.getElementById('top-ui-wrapper'); if (tUI) { tUI.classList.add('opacity-0', 'pointer-events-none'); tUI.style.display = 'none'; }
     updatePreview(); updateBadges();
@@ -387,7 +419,7 @@
     var pRect = panel.getBoundingClientRect(), cRect = inputC.getBoundingClientRect(), tx = 0, ty = 0;
     
     var badgeArea = document.getElementById('badge-area');
-    var baseTop = badgeArea ? (badgeArea.offsetTop + badgeArea.offsetHeight + 14) : 280; // バッジエリア下隣14pxに完全固定
+    var baseTop = badgeArea ? (badgeArea.offsetTop + badgeArea.offsetHeight + 14) : 280; // 14px固定
     var deltaY = baseTop - cRect.top; 
     
     if (badge) {
@@ -403,12 +435,11 @@
 
   function smoothScrollToContainer() { setTimeout(function() { var i = document.getElementById('input-container'); if(i) { var r = i.getBoundingClientRect(); if (r.bottom > window.innerHeight) window.scrollBy({ top: r.bottom - window.innerHeight + 24, behavior: 'smooth' }); } }, 150); }
 
-  // 🌟 【不具合解消】入力エリアをバッジエリアの下隣「14px」に完全に吸着させる
   function adjustInputContainerY() {
     if (!isFirstStepCompleted) return;
     var badgeArea = document.getElementById('badge-area'), iC = document.getElementById('input-container');
     if (badgeArea && iC) {
-      var baseTop = badgeArea.offsetTop + badgeArea.offsetHeight + 14; // 隣同士にぴったり吸い付かせる (14px)
+      var baseTop = badgeArea.offsetTop + badgeArea.offsetHeight + 14; // 14px隣接
       iC.style.position = 'absolute';
       iC.style.transition = (iC.style.top === "" || iC.style.top === "0px") ? 'top 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)' : 'top 0.3s ease-out';
       iC.style.top = baseTop + 'px';
@@ -454,7 +485,7 @@
       var step2 = function(cb) {
           if(toSlide.length===0) return cb(); var c=0, d=0;
           toSlide.reverse().forEach(function(s){
-              setTimeout(function(){ var p=document.getElementById('step-'+getStepIdStr(s)); if(p){ p.style.display='flex'; p.classList.add('edit-overlay'); var z=60*openEditPanels.indexOf(s); p.style.zIndex=1000+openEditPanels.indexOf(s); applyPanelErrorStyle(p,s); p.style.transform='translateY('+z+'px)'; p.style.setProperty('--z-offset',z+'px'); playAnimation(p,'anim-slide-error',1800,function(){p.style.transform='translateY('+z+'px)'; c++; if(c===toSlide.length)cb();}); } else { c++; if(c===toSlide.length)cb(); } }, d); d+=150;
+              setTimeout(function(){ var p=document.getElementById('step-'+getStepIdStr(s)); if(p){ p.style.display='flex'; p.classList.add('edit-overlay'); var z=60*openEditPanels.indexOf(s); p.style.zIndex=1000+openEditPanels.indexOf(s); applyPanelErrorStyle(p,s); p.style.transform='translateY('+z+'px)'; p.style.setProperty('--z-offset',z+'px'); playAnimation(p,'anim-slide-error',1800,function(){p.style.transform='translateY('+z+'px)'; c++; if(c===toSlide.length)cb();}); } else { c++; if(c===toClose.length)cb(); } }, d); d+=150;
           });
       };
       var step3 = function(cb) {
@@ -493,11 +524,9 @@
       b.className='badge-btn '+nS+(pB?' anim-bounce':''); b.disabled=(nS==='badge-wait'); b.style.pointerEvents=(nS==='badge-wait')?'none':'auto';
       if(o){ var oWB=o.classList.contains('anim-bounce'); if(nS==='badge-completed'||nS==='badge-edit'){ o.style.display='flex'; o.className="mini-badge "+(nS==='badge-edit'?'edit-mode':'ok-mode')+(oWB?' anim-bounce':''); o.innerHTML=(nS==='badge-edit'?(bi.n==='weather'?'<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>':'<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z"></path></svg>'):'<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>'); } else { o.style.display='none'; } }
     });
-    
-    var cBtn=document.getElementById('badge-cancel');
-    if(cBtn){ var cWB=cBtn.classList.contains('anim-bounce'); if(q.length>0){ cBtn.dataset.lastState='inactive'; cBtn.disabled=true; cBtn.className='badge-btn badge-wait'+(cWB?' anim-bounce':''); cBtn.style.pointerEvents='none'; } else if(openEditPanels.length>0){ if(cBtn.dataset.lastState!=='active'&&!cWB) triggerBounce(cBtn,null); cBtn.dataset.lastState='active'; cBtn.disabled=false; cBtn.className='badge-btn badge-cancel-active'+(cWB?' anim-bounce':''); cBtn.style.pointerEvents='auto'; } else { cBtn.dataset.lastState='inactive'; cBtn.disabled=true; cBtn.className='badge-btn badge-wait'+(cWB?' anim-bounce':''); cBtn.style.pointerEvents='none'; } }
   }
 
+  // 🌟 ボタン制御 (ルート決定の次にカレンダー登録パネルを自動連動 ＆ 天気を自動緑発光ポップ)
   function handlePanelButton(s) {
     try {
       if(!canLeaveCurrentStep(s)){ vibrateBadge(s); return; }
@@ -507,13 +536,12 @@
       var isE=(editingStep!==null);
       if(isE) { if(s>=1&&s<=4){ if(checkValuesChanged()){if(maxReachedStep>=5){isRouteDirty=true;isWeatherDirty=true;} if(hasSubmitted)isConfirmDirty=true;} } if(s===2)isDateDirty=false; if(s===3)isBusDirty=false; if(s===5)isRouteDirty=false; if(s===6)isConfirmDirty=false; }
       
-      // 🌟 目的地(STEP 1)決定時の罠ギミック着火
+      // 目的地(STEP 1)決定ギミック
       if(s===1 && !isFirstStepCompleted) {
           currentStep=2; maxReachedStep=2; 
           if(!document.getElementById('date-input').value) document.getElementById('date-input').value = new Date(Date.now()-(new Date().getTimezoneOffset()*60000)).toISOString().split('T')[0];
           updateDayInfoAndValidate(); 
           
-          // 目的地決定後にカチッと表示。罠の始まり
           var pDest = document.getElementById('preview-dest-area');
           var pTime = document.getElementById('timeline-area-wrapper');
           var pBadg = document.getElementById('badge-area');
@@ -521,7 +549,6 @@
           if (pTime) { pTime.style.display = 'block'; }
           if (pBadg) { pBadg.style.display = 'block'; }
 
-          // 入力エリアを absolute へ移行し、バッジエリア直下に吸い込み配置
           var iC = document.getElementById('input-container');
           if (iC) { iC.style.position = 'absolute'; }
 
@@ -573,7 +600,7 @@
           }); return; 
       }
 
-      // ルート決定後の遷移の確実な連動制御
+      // 🌟 ルート選択(STEP 5)決定時 ⇨ 「カレンダー登録(STEP 6)」を起動、かつ「現地の天気」を自動緑ポップ
       if(s===5) { 
           setTransformVarsDynamic(p,5,(isE?60*(openEditPanels.indexOf(5)+1):0),'suck'); setTimeout(function(){applyBadgeGreenPop(5);},600); 
           playAnimation(p,'anim-suck',800,function(){ 
@@ -583,7 +610,7 @@
               closeEditPanel(5); enforceErrorPanels(); reorderEditPanels(); 
               if(c){isWeatherDirty=true; fetchWeather(true);} 
             } else { 
-              maxReachedStep=6; currentStep=6; fetchWeather(false); 
+              maxReachedStep=6; currentStep=6; fetchWeather(false); // 天気データをバックグラウンド非同期取得
             } 
             updateBadges(); 
             if(!isE){ 
@@ -630,7 +657,7 @@
   function cancelAllEdits() {
     if(openEditPanels.length===0) return; scrollToBadgeArea(); var q=getErrorQueue();
     if(q.length>0&&openEditPanels.length>q.length){ var tC=openEditPanels.filter(function(s){return !q.includes(s);}); if(tC.length===0){vibrateBadge(q[0]);return;} var c=0; tC.forEach(function(s){ var i=openEditPanels.indexOf(s); openEditPanels.splice(i,1); var p=document.getElementById('step-'+getStepIdStr(s)); if(p){setTransformVarsDynamic(p,s,60*i,'suck');setTimeout(function(){applyBadgeGreenPop(s);},600);playAnimation(p,'anim-suck',800,function(){resetPanelStyles(p);c++;if(c===tC.length){enforceErrorPanels();document.getElementById('input-container').style.transition='top 0.3s ease-out';adjustInputContainerY();}});}else{c++;} }); updateBadges(); return; }
-    var tC=openEditPanels.slice(), cB=document.getElementById('badge-cancel'); if(cB)cB.disabled=true; openEditPanels=[]; editingStep=null; currentStep=maxReachedStep; var c=0, d=0, mD=(tC.length-1)*150+500;
+    var tC=openEditPanels.slice(); openEditPanels=[]; editingStep=null; currentStep=maxReachedStep; var c=0, d=0, mD=(tC.length-1)*150+500;
     for(var i=tC.length-1;i>=0;i--){ (function(s,del,z){ setTimeout(function(){ var p=document.getElementById('step-'+getStepIdStr(s)); if(p){setTransformVarsDynamic(p,s,60*(z+1),'suck');setTimeout(function(){applyBadgeGreenPop(s);},600);playAnimation(p,'anim-suck',800,function(){resetPanelStyles(p);c++;if(c===tC.length){var bg=document.getElementById('step-'+getStepIdStr(currentStep));if(bg)bg.style.zIndex='20';document.getElementById('input-container').style.transition='top 0.3s ease-out';adjustInputContainerY();}});}else{c++;} },del); })(tC[i],d,i); d+=150; }
     setTimeout(function(){updateBadges();validateStep();},mD);
   }
@@ -641,6 +668,56 @@
     var d=false, fn=function(suc,res){ if(d)return; d=true; try{ if(suc&&res&&res.success&&res.routes&&res.routes.length>0){renderRoutes(res.routes);}else{if(l)l.innerHTML='<div class="text-red-400 p-4 text-center text-lg font-bold w-full">'+(res&&res.message?res.message:'経路が見つかりませんでした')+'</div>';} }catch(e){renderRoutes([{summary:"バス(〇〇線) ⇨ 電車(〇〇線)\n(45分 / 5.2km)",durationMinutes:45}]);} smoothScrollToContainer(); };
     var tm=setTimeout(function(){if(!d)fn(false,{message:'タイムアウトしました'});},8000);
     if(typeof google!=='undefined') google.script.run.withSuccessHandler(function(r){clearTimeout(tm);fn(true,r);}).withFailureHandler(function(e){clearTimeout(tm);fn(false,e);}).getRoutesForWeb(dStr,tStr,dest); else setTimeout(function(){clearTimeout(tm);fn(false);},800);
+  }
+
+  function fetchWeather(isRe) {
+    try {
+      var dStr=document.getElementById('date-input').value, bS=document.getElementById('bus-time-select'), tStr=bS&&bS.value?bS.value:"12:00", dest=currentCandidate?currentCandidate.address:"", dB=document.getElementById('weather-detail-content'), b=document.getElementById('badge-weather');
+      if(!dStr||!dest)return; if(dB)dB.innerHTML='<div class="text-center w-full"><span class="animate-spin inline-block text-3xl">⏳</span><br/>取得中...</div>'; if(b)b.dataset.completed='false';
+      if(isRe)isWeatherDirty=true; else isWeatherDirty=false; updateBadges();
+      
+      var hS=function(r){ 
+        if(r&&r.icon){ 
+          var s=getSvgForWeather(r.icon); 
+          if(dB){ 
+            dB.innerHTML='<div class="flex-1 bg-gray-800 rounded-xl p-4 border border-gray-600 shadow-inner flex flex-col items-center"><div class="text-[12px] font-bold text-gray-400 mb-2">出発</div><div class="w-10 h-10 text-blue-300 mb-2">'+s+'</div><div class="text-2xl font-black text-white">'+r.temp+'℃</div></div>' +
+                         '<div class="flex-1 bg-gray-800 rounded-xl p-4 border border-gray-600 shadow-inner flex flex-col items-center"><div class="text-[12px] font-bold text-gray-400 mb-2">到着</div><div class="w-10 h-10 text-green-400 mb-2">'+s+'</div><div class="text-2xl font-black text-white">'+r.temp+'℃</div></div>' +
+                         '<div class="flex-1 bg-gray-800 rounded-xl p-4 border border-gray-600 shadow-inner flex flex-col items-center"><div class="text-[12px] font-bold text-gray-400 mb-2">帰宅</div><div class="w-10 h-10 text-purple-300 mb-2">'+s+'</div><div class="text-2xl font-black text-white">'+r.temp+'℃</div></div>'; 
+          }
+          
+          window.previewWeatherStart = r.icon + " " + r.temp + "℃";
+          window.previewWeatherArr = r.icon + " " + r.temp + "℃";
+          
+          isWeatherDirty=false; 
+          if(b) b.dataset.completed='true';
+          
+          var cW=function(){ 
+            var w=openEditPanels.indexOf('weather'); 
+            if(w!==-1){
+              openEditPanels.splice(w,1); 
+              if(editingStep==='weather'){
+                editingStep=openEditPanels.length>0?openEditPanels[openEditPanels.length-1]:null; 
+                currentStep=editingStep||maxReachedStep;
+              } 
+              updateBadges(); 
+              var wp=document.getElementById('step-weather'); 
+              setTransformVarsDynamic(wp,'weather',60*w,'suck'); 
+              setTimeout(function(){applyBadgeGreenPop('weather');},600); 
+              playAnimation(wp,'anim-suck',800,function(){resetPanelStyles(wp);reorderEditPanels();adjustInputContainerY();});
+            } else {
+              updateBadges();
+              applyBadgeGreenPop('weather'); // 天気を自動緑発光ポップ
+            } 
+          };
+          if(window.isEnforcingErrors) window.pendingWeatherClose=cW; else cW();
+        } else { 
+          isWeatherDirty=true; 
+          updateBadges(); 
+          if(dB) dB.innerHTML='<div class="text-gray-400 p-4">取得失敗</div>'; 
+        }
+      };
+      if(typeof google!=='undefined') google.script.run.withSuccessHandler(hS).withFailureHandler(function(e){isWeatherDirty=true;updateBadges();if(dB)dB.innerHTML='<div class="text-red-400 p-4">通信エラー</div>';}).getWeatherForWeb(dest,dStr,tStr); else setTimeout(function(){hS({icon:"☀️",temp:"25"});},1200);
+    } catch(e) { console.error("fetchWeather Error:", e); }
   }
 
   // 🌟 タブの切り替え制御
@@ -723,70 +800,28 @@
     updateBadges();
   }
 
-  // 🌟 営業時間表示テキストの日本語化
-  function formatBizTimeJp(bT, dS) {
-    if(!bT||bT==="---")return "---"; var d=new Date(dS); if(isNaN(d.getTime()))return "---"; var tD=["日曜日","月曜日","火曜日","水曜日","木曜日","金曜日","土曜日"][d.getDay()], ls=String(bT).split('\n');
-    for(var i=0;i<ls.length;i++){ var l=ls[i]; if(l.indexOf(tD)!==-1){ var cL=l.replace(tD+": ","").replace(tD+"曜日: ","").trim(); if(cL==="休業日"||cL==="Closed"||cL==="")return tD+"\n休業日"; var hk=cL.replace(/[Ａ-Ｚａ-ｚ０-９]/g,function(s){return String.fromCharCode(s.charCodeAt(0)-0xFEE0);}), fm=hk.replace(/[\~～-]/g,'〜'), ts=fm.split(/, |、/); return tD+"\n"+(ts.length===1?ts[0]:ts.join('\n')); } } return "---";
-  }
-
-  // 🌟 逆算ロジックによる時系列計算
-  function calculateTimesForPreview(bT, sT, dM) {
-    if(!bT||!sT)return {start:"---",bus:"---",arr:"---",ret:"---"}; var p=bT.split(':'), h=parseInt(p[0],10), m=parseInt(p[1],10), s=parseInt(sT.replace('時間',''),10)||0, dur=dM||15, dB=new Date(); dB.setHours(h,m,0); var dS=new Date(dB.getTime()-5*60000), dA=new Date(dB.getTime()+dur*60000), dL=new Date(dA.getTime()+s*3600000), dR=new Date(dL.getTime()+dur*60000); var f=function(d){return d.getHours()+"時"+('0'+d.getMinutes()).slice(-2)+"分";}, fr=function(d){return d.getHours()+":"+('0'+d.getMinutes()).slice(-2);}; return {start:f(dS),rawStart:fr(dS),bus:f(dB),rawBus:fr(dB),arr:f(dA),rawArr:fr(dA),ret:f(dR),rawRet:fr(dR)};
-  }
-
-  // 🌟 プレビュー表示の更新 (アコーディオンタイトルの1行動的書き換え対応)
-  function updatePreview() {
-    try {
-      var rD=document.getElementById('date-input').value, d=new Date(rD), jD=["日","月","火","水","木","金","土"];
-      var hD=document.getElementById('preview-header-date'); if(hD) hD.innerHTML=(rD&&!isNaN(d.getTime())) ? getSvgForIcon('clock', 'w-4 h-4 text-blue-400') + d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日 ("+jD[d.getDay()]+")" : getSvgForIcon('clock', 'w-4 h-4 text-gray-500') + "未定";
-      var sS=document.getElementById('stay-select'), bS=document.getElementById('bus-time-select'), sV=sS?sS.value:"", bV=bS?bS.value:"", ts={start:"---",bus:"---",arr:"---",ret:"---"}, dur=window.selectedRouteDuration!==null?window.selectedRouteDuration:15;
-      if(bV&&bV!=="error"&&sV&&selectedRouteIndex!==null){ts=calculateTimesForPreview(bV,sV,dur); window.calculatedTimesRaw=ts;} else if(bV&&bV!=="error")ts.bus=String(bV).replace(':','時')+'分';
-      
-      var mH=window.currentDayInfo?window.currentDayInfo.holiday||"":"", mS=window.currentDayInfo?window.currentDayInfo.seasonal||"":"";
-      
-      // 🌟 「予定タイムライン」の文字を「出発日」「祝日」「季節の行事」の1行並びに動的書き換え
-      var titleSpan = document.getElementById('timeline-collapse-title');
-      if (titleSpan) {
-        if (rD && !isNaN(d.getTime())) {
-          var formattedDate = d.getFullYear() + "/" + (d.getMonth() + 1) + "/" + d.getDate() + "(" + jD[d.getDay()] + ")";
-          var holText = mH ? " [祝:" + mH + "]" : "";
-          var seaText = mS ? " [" + mS + "]" : "";
-          titleSpan.innerText = formattedDate + holText + seaText;
-        } else {
-          titleSpan.innerText = "予定タイムライン";
-        }
-      }
-
-      // 縦構成時系列(アコーディオン内)を更新
-      var tVCont = document.getElementById('timeline-collapse-content');
-      if (tVCont) {
-        var wStart = window.previewWeatherStart || "";
-        var wArr = window.previewWeatherArr || "";
-        tVCont.innerHTML = getVerticalTimelineHTML(ts.start, ts.bus, ts.arr, wStart, "", wArr, sV, ts.ret, wStart); // 帰宅天気は出発と同じ
-      }
-      
-      var hW=document.getElementById('preview-header-holiday-wrap');if(hW){if(mH){hW.innerHTML=getSvgForIcon('flag', 'w-3.5 h-3.5') + mH;hW.style.display="flex";}else hW.style.display="none";} 
-      var sW=document.getElementById('preview-header-seasonal-wrap');if(sW){if(mS){sW.innerHTML='🌸 ' + mS;sW.style.display="flex";}else sW.style.display="none";}
-      
-      if(currentCandidate){
-        var cN=String(currentCandidate.name||""), dN=document.getElementById('preview-dest-name'); if(dN)dN.innerText=cN||"未選択";
-        var isH=cN.indexOf('病院')!==-1||cN.indexOf('クリニック')!==-1||cN.indexOf('科')!==-1, iE=document.getElementById('preview-dest-icon'); if(iE)iE.innerHTML=isH?getSvgForIcon('hospital','w-6 h-6 shrink-0'):getSvgForIcon('map','w-6 h-6 shrink-0');
-        var aE=document.getElementById('preview-address'); if(aE)aE.innerText=String(currentCandidate.parsedAddress||currentCandidate.address||"---");
-        var bE=document.getElementById('preview-building'); if(bE){if(currentCandidate.parsedBuilding&&currentCandidate.parsedBuilding!=="---"){bE.innerText=currentCandidate.parsedBuilding;bE.style.display="block";}else bE.style.display="none";}
-        var pE=document.getElementById('preview-phone'); if(pE)pE.innerText=String(currentCandidate.parsedPhone||currentCandidate.phone||"---");
-        var wC=document.getElementById('preview-web-container'); if(wC){if(currentCandidate.website&&currentCandidate.website!=="---")wC.style.display="flex";else wC.style.display="none";}
-        var bZ=document.getElementById('preview-biz'); if(bZ){bZ.className="text-lg font-bold text-gray-200 leading-snug whitespace-pre-wrap"; bZ.innerText=formatBizTimeJp(String(currentCandidate.parsedBiz||currentCandidate.bizHours||"---"),rD);}
-      } else { var dN=document.getElementById('preview-dest-name'); if(dN)dN.innerText="未選択"; }
-      if (isFirstStepCompleted) setTimeout(function(){adjustInputContainerY();},50);
-    } catch(e) { console.error("updatePreview Error:", e); }
-  }
-
-  function executeCompleteAutomation() {
-    if(!currentCandidate){showToast("⚠️ 目的地が選ばれていません！");return;} if(isDateDirty||isBusDirty||isRouteDirty||isConfirmDirty||isWeatherDirty){showToast("⚠️ 赤く光っている項目を確認してください");return;}
-    var rD=document.getElementById('date-input').value, fD=""; if(rD){var p=rD.split('-');if(p.length===3)fD="'"+p[0]+"/"+p[1]+"/"+p[2];}
-    var cT=window.calculatedTimesRaw||{}, py={name:currentCandidate.name,address:currentCandidate.parsedAddress,placeId:currentCandidate.placeId,date:fD,stayTime:document.getElementById('stay-select').value,calType:document.getElementById('cal-account-select').value,busTime:document.getElementById('bus-time-select').value?("'"+document.getElementById('bus-time-select').value):"",startTime:cT.rawStart?("'"+cT.rawStart):"",arrTime:cT.rawArr?("'"+cT.rawArr):"",retTime:cT.rawRet?("'"+cT.rawRet):"",postal:currentCandidate.postal||"",building:currentCandidate.parsedBuilding||"",phone:currentCandidate.parsedPhone,website:currentCandidate.website||"",bizHours:currentCandidate.parsedBiz,holiday:window.currentDayInfo?window.currentDayInfo.holiday:"",seasonalEvent:window.currentDayInfo?window.currentDayInfo.seasonal:"",icon:""};
-    showToast("⏳ 送信中..."); var sB=document.getElementById('submit-btn'); if(sB)sB.innerHTML='<span class="animate-spin inline-block">⏳</span><span>送信中...</span>';
-    if(typeof google!=='undefined') google.script.run.withSuccessHandler(function(r){showToast("✨ 完了しました！");if(sB){sB.innerHTML='<span>完了</span>';sB.classList.add('pointer-events-none','bg-gray-600');sB.classList.remove('bg-blue-600');}hasSubmitted=true;isConfirmDirty=false;updateBadges();setTimeout(goToDeckScreen,1500);}).withFailureHandler(function(e){showToast("❌ エラー: "+e.message);if(sB)sB.innerHTML='<span>送信</span>';}).executeFullAutomation(py,2); else setTimeout(function(){showToast("✨ 完了しました！");if(sB){sB.innerHTML='<span>完了</span>';sB.classList.add('pointer-events-none','bg-gray-600');sB.classList.remove('bg-blue-600');}hasSubmitted=true;isConfirmDirty=false;updateBadges();setTimeout(goToDeckScreen,1500);},1500);
+  // 🌟 ルート選択結果候補の描画 (横スワイプ仕様)
+  function renderRoutes(rs) {
+    var l=document.getElementById('route-candidates'); l.innerHTML=""; selectedRouteIndex=null; window.selectedRouteDuration=null;
+    rs.forEach(function(r, i){ 
+      var d=document.createElement('div'); 
+      d.className='route-card bg-gray-800 border-2 border-gray-600 rounded-xl p-4 cursor-pointer transition-all min-w-[85%] snap-center shrink-0'; 
+      d.innerHTML='<div class="font-black text-blue-400 text-xl mb-2">到着まで: '+r.durationMinutes+'分</div><div class="text-base text-gray-300 whitespace-pre-wrap leading-relaxed">'+r.summary+'</div>'; 
+      d.onclick=function(){
+        document.querySelectorAll('.route-card').forEach(function(c){c.classList.remove('bg-blue-900','border-blue-400');c.classList.add('bg-gray-800','border-gray-600');}); 
+        this.classList.remove('bg-gray-800','border-gray-600'); 
+        this.classList.add('bg-blue-900','border-blue-400'); 
+        selectedRouteIndex=i+1; 
+        window.selectedRouteDuration=r.durationMinutes; 
+        validateStep(); 
+        updatePreview(); 
+        updateBadges();
+      }; 
+      l.appendChild(d); 
+    }); 
+    validateStep(); 
+    updatePreview(); 
+    updateBadges();
   }
 
   // 🌟 【不具合解消】決定ボタンのキー不一致（next-5とnext-routeの紐づけエラー）を完全に解消
@@ -821,16 +856,17 @@
     }
   }
 
-  // 🌟 各バッジへのピクトグラム＆日本語テキスト流し込み
+  // 🌟 各バッジへのピクトグラム＆日本語テキスト流し込み（バッジとタイトルのテキストを完全統一、カレンダー/天気入れ替え）
   function buildBadgeLayouts() {
     var mapping = [
-      { id: '1', icon: 'map', label: 'どこ？' },
-      { id: '2', icon: 'calendar', label: 'いつ？' },
-      { id: '3', icon: 'clock', label: '何時？' },
-      { id: '4', icon: 'clock', label: '何時間？' },
-      { id: 'route', icon: 'map', label: '経路' },
-      { id: 'weather', icon: 'calendar', label: '天気' },
-      { id: 'confirm', icon: 'calendar', label: '保存' }
+      { id: '1', icon: 'map', label: '目的地' },
+      { id: '2', icon: 'calendar', label: '出発日' },
+      { id: '3', icon: 'bus', label: '宮戸橋バス停' }, // 宮戸橋バス停アイコンをバスに変更
+      { id: '4', icon: 'cup', label: '滞在時間' }, // 滞在時間アイコンをティーカップに変更
+      { id: 'route', icon: 'map', label: 'ルート選択' },
+      { id: 'confirm', icon: 'calendar', label: 'カレンダー登録' }, // 位置入れ替え
+      { id: 'weather', icon: 'calendar', label: '現地の天気' }, // 位置入れ替え
+      { id: 'cancel', icon: 'x', label: 'キャンセル' } // ❌キャンセルアイコン
     ];
     mapping.forEach(function(item) {
       var btn = document.getElementById('badge-' + item.id);
@@ -869,7 +905,7 @@
     updatePreview();
   }
 
-  // 🌟 日付変更時のGAS連携カレンダー・祝日・時刻表データ取得
+  // 🌟 日付変更時の曜日・祝日取得 ＆ プルダウンの平日/土曜/日祝のカラー制御
   function updateDayInfoAndValidate() {
     var dInput = document.getElementById('date-input');
     if (!dInput) return;
@@ -897,6 +933,9 @@
               bSelect.appendChild(opt);
             });
             if (originalValues.step3) bSelect.value = originalValues.step3;
+            
+            // 🌟 プルダウン文字色を曜日に合わせて自動着色（平日=白色、土曜日=青色、日祝日=赤色）
+            bSelect.className = bSelect.className.replace(/text-[a-z]+-400/g, '').trim() + ' ' + res.colorClass;
           }
           if (res.colorClass) {
             dInput.className = dInput.className.replace(/text-[a-z]+-400/g, '').trim() + ' ' + res.colorClass;
@@ -974,21 +1013,22 @@
     
     try{ var nT = document.getElementById('nav-title'); if(nT){ nT.classList.remove('flex-1'); nT.className += " absolute left-1/2 -translate-x-1/2"; } } catch(e){}
     
-    // ①などの番号をピクトグラムへ自動置き換え
+    // ①などの番号をピクトグラムへ自動置き換え（バス・カップへ差し替え、タイトル文字は完全一致）
     try {
       document.getElementById('step-1-icon').innerHTML = getSvgForIcon('map', 'w-6 h-6');
       document.getElementById('step-2-icon').innerHTML = getSvgForIcon('calendar', 'w-6 h-6');
-      document.getElementById('step-3-icon').innerHTML = getSvgForIcon('clock', 'w-6 h-6');
-      document.getElementById('step-4-icon').innerHTML = getSvgForIcon('clock', 'w-6 h-6');
+      document.getElementById('step-3-icon').innerHTML = getSvgForIcon('bus', 'w-6 h-6'); // バスアイコン
+      document.getElementById('step-4-icon').innerHTML = getSvgForIcon('cup', 'w-6 h-6'); // ティーカップ
       document.getElementById('step-5-icon').innerHTML = getSvgForIcon('map', 'w-6 h-6');
       document.getElementById('step-weather-icon').innerHTML = getSvgForIcon('calendar', 'w-6 h-6');
+      document.getElementById('step-6-icon').innerHTML = getSvgForIcon('calendar', 'w-6 h-6');
     } catch(e) {}
 
     // バッジエリアレイアウト再構築の実行
     buildBadgeLayouts();
 
     try{ var m=document.getElementById('tab-master-btn'), s=document.getElementById('tab-search-btn'); if(m&&m.innerHTML.indexOf('<svg')===-1)m.innerHTML=getSvgForIcon('list','w-7 h-7 shrink-0')+'<span>一覧</span>'; if(s&&s.innerHTML.indexOf('<svg')===-1)s.innerHTML=getSvgForIcon('search','w-7 h-7 shrink-0')+'<span>検索</span>'; }catch(e){}
-    try{ var nN=document.getElementById('nav-new-btn');if(nN)nN.onclick=function(e){e.preventDefault();goToFormScreen();}; var nB=document.getElementById('nav-back-btn');if(nB)nB.onclick=function(e){e.preventDefault();goToDeckScreen();}; [{id:'btn-next-1',a:1},{id:'btn-next-2',a:2},{id:'btn-next-3',a:3},{id:'btn-next-4',a:4},{id:'btn-next-route',a:5}].forEach(function(i){var b=document.getElementById(i.id);if(b)b.onclick=function(e){e.preventDefault();handlePanelButton(i.a);};}); var bM=document.getElementById('btn-master-reg');if(bM)bM.onclick=function(e){e.preventDefault();if(currentCandidate)handlePanelButton(1);}; var bS=document.getElementById('submit-btn');if(bS)bS.onclick=function(e){e.preventDefault();executeCompleteAutomation();}; var bW=document.querySelector('#step-weather .ok-btn');if(bW)bW.onclick=function(e){e.preventDefault();handlePanelButton('weather');}; }catch(e){}
+    try{ var nN=document.getElementById('nav-new-btn');if(nN)nN.onclick=function(e){e.preventDefault();goToFormScreen();}; [{id:'btn-next-1',a:1},{id:'btn-next-2',a:2},{id:'btn-next-3',a:3},{id:'btn-next-4',a:4},{id:'btn-next-route',a:5}].forEach(function(i){var b=document.getElementById(i.id);if(b)b.onclick=function(e){e.preventDefault();handlePanelButton(i.a);};}); var bM=document.getElementById('btn-master-reg');if(bM)bM.onclick=function(e){e.preventDefault();if(currentCandidate)handlePanelButton(1);}; var bS=document.getElementById('submit-btn');if(bS)bS.onclick=function(e){e.preventDefault();executeCompleteAutomation();}; var bW=document.querySelector('#step-weather .ok-btn');if(bW)bW.onclick=function(e){e.preventDefault();handlePanelButton('weather');}; }catch(e){}
     
     goToDeckScreen();
     if(typeof google!=='undefined') google.script.run.withSuccessHandler(function(l){masterDataList=l;var s=document.getElementById('master-select');if(s){s.innerHTML='<option value="">▼ 選択</option>';for(var i=0;i<l.length;i++){var o=document.createElement('option');o.value=i;o.text=l[i].name;s.appendChild(o);}}}).getMasterListForWeb(); else {masterDataList=[{placeId:"m1",name:"あさか医療センター",address:"埼玉県朝霞市溝沼1340-1",bizHours:"月曜:09:00〜18:00"},{placeId:"m2",name:"青柳診療所",address:"埼玉県朝霞市本町2-13-6",bizHours:"毎日:10:00〜20:00"}];var sel=document.getElementById('master-select');if(sel){sel.innerHTML='<option value="">▼ 選択</option>';for(var i=0;i<masterDataList.length;i++){var opt=document.createElement('option');opt.value=i;opt.text=masterDataList[i].name;sel.appendChild(opt);}}}

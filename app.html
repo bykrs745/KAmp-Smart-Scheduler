@@ -11,9 +11,9 @@
 
 <body class="bg-gray-950 font-sans text-gray-200 antialiased selection:bg-blue-500/30 overflow-x-hidden w-full h-full pb-32">
 
- <!-- 🍞 固定ヘッダー -->
+ <!-- 🍞 固定ヘッダー（破棄ボタンを廃止） -->
  <div class="fixed top-0 left-0 w-full h-[72px] bg-gray-900/90 backdrop-blur-md border-b border-gray-800 z-50 shadow-sm flex items-center justify-between px-4">
-   <button id="nav-back-btn" class="hidden items-center justify-center w-10 h-10 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 active:scale-90 transition-transform">
+   <button id="nav-back-btn" type="button" onclick="handleBackAction()" class="hidden items-center justify-center w-10 h-10 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 active:scale-90 transition-transform">
      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
    </button>
 
@@ -23,10 +23,6 @@
      <button id="nav-new-btn" onclick="goToFormScreen()" class="flex items-center justify-center gap-1 bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg font-bold text-sm shadow-md active:scale-95 transition-transform whitespace-nowrap">
        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
        <span>新規作成</span>
-     </button>
-     <button id="nav-clear-btn" onclick="resetAll()" class="hidden items-center justify-center gap-1 bg-gray-800 hover:bg-red-900/50 text-gray-400 hover:text-red-400 px-3 py-1.5 rounded-lg font-bold text-xs border border-gray-700 active:scale-95 transition-all">
-       <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-       <span>破棄</span>
      </button>
    </div>
  </div>
@@ -73,12 +69,12 @@
        </div>
      </div>
 
-     <!-- 🗺️ 【中部：縦型時系列タイムライン（お母様向けアコーディオン式）】最初は非表示 -->
+     <!-- 🗺️ 【中部：縦型時系列タイムライン】最初は非表示 -->
      <div id="timeline-area-wrapper" class="w-full mb-3" style="display: none;">
        <button type="button" onclick="toggleTimelineCollapse()" class="w-full bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3 flex items-center justify-between text-gray-300 font-bold active:scale-98 transition-all shadow-md">
          <span class="flex items-center gap-2 min-w-0 flex-1">
            <svg class="w-5 h-5 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-           <!-- 1行の中に「出発日」「祝日」「季節の行事」を自動で並べるヘッダー -->
+           <!-- 1行の中に「出発日」「祝日」「季節の行事」を動的表示 -->
            <span id="timeline-collapse-title" class="text-sm font-black tracking-wider truncate text-left text-gray-100">予定タイムライン</span>
          </span>
          <span id="timeline-collapse-icon" class="transition-transform duration-300 ml-2">
@@ -90,76 +86,76 @@
        </div>
      </div>
 
-     <!-- 🎛️ 【中部：バッジエリア（平型 4列×2段グリッド）】最初は非表示 -->
+     <!-- 🎛️ 【中部：バッジエリア（平型 4列×2段グリッド、カレンダー登録/天気予報を入れ替え）】最初は非表示 -->
      <div id="badge-area" class="w-full bg-gray-900 border border-gray-800 rounded-2xl p-3 shadow-lg mb-3" style="display: none;">
        <div class="grid grid-cols-4 gap-2">
-         <!-- 1段目: 目的地, 日付, 時間, 滞在 -->
+         <!-- 1段目: 目的地, 出発日, 宮戸橋バス停, 滞在時間 -->
          <div class="relative">
            <button id="badge-1" onclick="tapBadge(1)" class="badge-btn badge-wait w-full h-[68px]" data-last-state="badge-wait">
              <span class="icon-wrap"></span>
-             <span class="badge-label">どこ？</span>
+             <span class="badge-label">目的地</span>
            </button>
            <div id="ok-1" class="mini-badge ok-mode" style="display:none;"></div>
          </div>
          <div class="relative">
            <button id="badge-2" onclick="tapBadge(2)" class="badge-btn badge-wait w-full h-[68px]" data-last-state="badge-wait">
              <span class="icon-wrap"></span>
-             <span class="badge-label">いつ？</span>
+             <span class="badge-label">出発日</span>
            </button>
            <div id="ok-2" class="mini-badge ok-mode" style="display:none;"></div>
          </div>
          <div class="relative">
            <button id="badge-3" onclick="tapBadge(3)" class="badge-btn badge-wait w-full h-[68px]" data-last-state="badge-wait">
              <span class="icon-wrap"></span>
-             <span class="badge-label">何時？</span>
+             <span class="badge-label">宮戸橋バス停</span>
            </button>
            <div id="ok-3" class="mini-badge ok-mode" style="display:none;"></div>
          </div>
          <div class="relative">
            <button id="badge-4" onclick="tapBadge(4)" class="badge-btn badge-wait w-full h-[68px]" data-last-state="badge-wait">
              <span class="icon-wrap"></span>
-             <span class="badge-label">何時間？</span>
+             <span class="badge-label">滞在時間</span>
            </button>
            <div id="ok-4" class="mini-badge ok-mode" style="display:none;"></div>
          </div>
          
-         <!-- 2段目: ルート, 天気, 確定, 破棄 -->
+         <!-- 2段目: ルート選択, カレンダー登録, 現地の天気, キャンセル -->
          <div class="relative">
            <button id="badge-route" onclick="tapBadge(5)" class="badge-btn badge-wait w-full h-[68px]" data-last-state="badge-wait">
              <span class="icon-wrap"></span>
-             <span class="badge-label">経路</span>
+             <span class="badge-label">ルート選択</span>
            </button>
            <div id="ok-route" class="mini-badge ok-mode" style="display:none;"></div>
          </div>
          <div class="relative">
-           <button id="badge-weather" onclick="tapBadge('weather')" class="badge-btn badge-wait w-full h-[68px]" data-completed="false" data-last-state="badge-wait">
-             <span class="icon-wrap"></span>
-             <span class="badge-label">天気</span>
-           </button>
-           <div id="ok-weather" class="mini-badge ok-mode" style="display:none;"></div>
-         </div>
-         <div class="relative">
            <button id="badge-confirm" onclick="tapBadge(6)" class="badge-btn badge-wait w-full h-[68px]" data-last-state="badge-wait">
              <span class="icon-wrap"></span>
-             <span class="badge-label">保存</span>
+             <span class="badge-label">カレンダー登録</span>
            </button>
            <div id="ok-confirm" class="mini-badge ok-mode" style="display:none;"></div>
          </div>
          <div class="relative">
-           <button id="badge-cancel" onclick="cancelAllEdits()" class="badge-btn badge-wait w-full h-[68px] shrink-0 bg-gray-800 text-gray-500 border border-gray-700 flex flex-col items-center justify-center gap-0.5" disabled data-last-state="inactive">
+           <button id="badge-weather" onclick="tapBadge('weather')" class="badge-btn badge-wait w-full h-[68px]" data-completed="false" data-last-state="badge-wait">
+             <span class="icon-wrap"></span>
+             <span class="badge-label">現地の天気</span>
+           </button>
+           <div id="ok-weather" class="mini-badge ok-mode" style="display:none;"></div>
+         </div>
+         <div class="relative">
+           <button id="badge-cancel" onclick="handleBackAction()" class="badge-btn badge-wait w-full h-[68px] shrink-0 bg-gray-800 text-gray-500 border border-gray-700 flex flex-col items-center justify-center gap-0.5 active:scale-95" data-last-state="active" style="pointer-events: auto;">
               <span class="icon-wrap"></span>
-              <span class="badge-label text-[9px]">破棄</span>
+              <span class="badge-label">キャンセル</span>
            </button>
          </div>
        </div>
      </div>
     
-     <!-- ⌨️ 【下段：入力エリア】最初は relative にて目的地パネルのみを画面全域に表示 -->
+     <!-- ⌨️ 【下段：入力エリア】 -->
      <div id="input-container" class="relative w-full z-10">
 
        <!-- STEP 1 -->
        <div id="step-1" class="step-panel bg-gray-900 border-2 border-gray-700 shadow-2xl rounded-2xl p-6 w-full flex-col flex" style="z-index: 20;">
-         <h2 class="text-blue-400 font-extrabold text-lg mb-4 flex items-center gap-2">
+         <h2 class="text-white font-extrabold text-lg mb-4 flex items-center gap-2">
            <span id="step-1-icon" class="text-blue-500 shrink-0"></span>
            <span>目的地</span>
          </h2>
@@ -192,36 +188,42 @@
          <button id="btn-next-1" class="ok-btn mt-6 w-full flex items-center justify-center py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-extrabold text-xl shadow-lg active:scale-95 transition-transform" disabled>決定</button>
        </div>
 
-       <!-- STEP 2: 日付 -->
+       <!-- STEP 2: 出発日 -->
        <div id="step-2" class="step-panel bg-gray-900 border-2 border-gray-700 shadow-2xl rounded-2xl p-6 w-full flex-col hidden">
-         <h2 class="text-blue-400 font-extrabold text-lg mb-2 flex items-center gap-2">
+         <h2 class="text-white font-extrabold text-lg mb-2 flex items-center gap-2">
            <span id="step-2-icon" class="text-blue-500 shrink-0"></span>
            <span>出発日</span>
          </h2>
+         <!-- 文字色を黒にし、カレンダーアイコンを非表示にして「∨」プルダウン矢印を配置 -->
          <div class="relative w-full mt-2">
-            <input type="date" id="date-input" onchange="updateDayInfoAndValidate()" class="w-full bg-gray-100 border-2 border-gray-400 rounded-2xl px-4 py-6 text-3xl font-black text-center focus:outline-none shadow-inner text-gray-900 cursor-pointer appearance-none">
+            <input type="date" id="date-input" onchange="updateDayInfoAndValidate()" class="w-full bg-gray-100 border-2 border-gray-400 rounded-2xl px-4 py-6 text-3xl font-black text-center focus:outline-none shadow-inner text-black cursor-pointer appearance-none">
+            <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center text-blue-600">
+               <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
          </div>
          <button id="btn-next-2" class="ok-btn mt-6 w-full flex items-center justify-center py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-extrabold text-xl shadow-lg active:scale-95 transition-transform" disabled>決定</button>
        </div>
 
-       <!-- STEP 3: 時間 -->
+       <!-- STEP 3: 宮戸橋バス停 -->
        <div id="step-3" class="step-panel bg-gray-900 border-2 border-gray-700 shadow-2xl rounded-2xl p-6 w-full flex-col hidden">
-         <h2 class="text-blue-400 font-extrabold text-lg mb-2 flex items-center gap-2">
+         <h2 class="text-white font-extrabold text-lg mb-2 flex items-center gap-2">
            <span id="step-3-icon" class="text-blue-500 shrink-0"></span>
-           <span>宮戸橋 出発時刻</span>
+           <span>宮戸橋バス停</span>
          </h2>
          <div class="relative w-full mt-2">
-            <select id="bus-time-select" onchange="onBusTimeChange(this)" class="w-full bg-gray-100 border-2 border-gray-400 rounded-2xl px-4 py-5 text-3xl font-black focus:outline-none appearance-none text-center shadow-inner text-gray-900">
+            <select id="bus-time-select" onchange="onBusTimeChange(this)" class="w-full bg-gray-100 border-2 border-gray-400 rounded-2xl px-4 py-5 text-3xl font-black focus:outline-none appearance-none text-center shadow-inner text-white">
               <option value="" style="color: #111827;">▼ 選択</option>
             </select>
-            <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center"><svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+            <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center text-blue-600">
+               <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
          </div>
          <button id="btn-next-3" class="ok-btn mt-6 w-full flex items-center justify-center py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-extrabold text-xl shadow-lg active:scale-95 transition-transform" disabled>決定</button>
        </div>
 
-       <!-- STEP 4: 滞在 -->
+       <!-- STEP 4: 滞在時間 -->
        <div id="step-4" class="step-panel bg-gray-900 border-2 border-gray-700 shadow-2xl rounded-2xl p-6 w-full flex-col hidden">
-         <h2 class="text-blue-400 font-extrabold text-lg mb-2 flex items-center gap-2">
+         <h2 class="text-white font-extrabold text-lg mb-2 flex items-center gap-2">
            <span id="step-4-icon" class="text-blue-500 shrink-0"></span>
            <span>滞在時間</span>
          </h2>
@@ -238,7 +240,7 @@
        <!-- STEP 5: ルート選択 -->
        <div id="step-5" class="step-panel bg-gray-900 border-2 border-gray-700 shadow-2xl rounded-2xl p-6 w-full flex-col hidden">
          <div class="flex justify-between items-center mb-2">
-            <h2 class="text-blue-400 font-extrabold text-lg flex items-center gap-2">
+            <h2 class="text-white font-extrabold text-lg flex items-center gap-2">
               <span id="step-5-icon" class="text-blue-500 shrink-0"></span>
               <span>ルート選択</span>
             </h2>
@@ -250,7 +252,7 @@
       
        <!-- STEP Weather -->
        <div id="step-weather" class="step-panel bg-gray-900 border-2 border-gray-700 shadow-2xl rounded-2xl p-6 w-full flex-col hidden">
-         <h2 class="text-blue-400 font-extrabold text-lg flex items-center gap-2 mb-4">
+         <h2 class="text-white font-extrabold text-lg flex items-center gap-2 mb-4">
            <span id="step-weather-icon" class="text-blue-500 shrink-0"></span>
            <span>現地の天気</span>
          </h2>
@@ -258,9 +260,13 @@
          <button class="ok-btn mt-2 w-full flex items-center justify-center py-4 bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white rounded-2xl font-extrabold text-xl shadow-lg active:scale-95 transition-transform">閉じる</button>
        </div>
 
-       <!-- STEP 6: 最終確認 -->
+       <!-- STEP 6: カレンダー登録 -->
        <div id="step-6" class="step-panel bg-gray-900 border-2 border-blue-600 shadow-blue-900/30 shadow-2xl rounded-2xl p-6 w-full flex-col hidden">
-         <h2 class="text-blue-400 font-extrabold text-xl mb-6 text-center">カレンダーに登録しますか？</h2>
+         <h2 class="text-white font-extrabold text-lg mb-4 flex items-center gap-2">
+           <span id="step-6-icon" class="text-blue-500 shrink-0"></span>
+           <span>カレンダー登録</span>
+         </h2>
+         <p class="text-gray-300 text-xl font-bold mb-4 text-center">カレンダーに登録しますか？</p>
          <div class="relative w-full mb-6">
             <select id="cal-account-select" class="w-full bg-gray-800 border-2 border-gray-600 rounded-xl px-4 py-4 text-lg font-bold text-white focus:outline-none appearance-none shadow-sm">
                <option value="メイン">メインカレンダー (自分用)</option>
@@ -271,6 +277,17 @@
          <button id="submit-btn" class="w-full py-5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-extrabold text-2xl shadow-lg active:scale-95 transition-all">送信</button>
        </div>
 
+     </div>
+   </div>
+ </div>
+
+ <!-- 🚨 【中央確認モーダル】戻る/キャンセル時用 -->
+ <div id="confirm-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-[9999] hidden items-center justify-center p-4">
+   <div class="bg-gray-900 border-2 border-gray-800 rounded-3xl p-6 max-w-sm w-full text-center space-y-6 shadow-2xl">
+     <p class="text-xl font-black text-gray-100 leading-relaxed tracking-wider">入力中を破棄して<br>戻りますか？</p>
+     <div class="grid grid-cols-2 gap-4">
+       <button onclick="closeConfirmModal(false)" class="py-4 bg-gray-800 hover:bg-gray-700 text-gray-300 font-extrabold rounded-2xl text-lg border border-gray-700 active:scale-95 transition-transform">いいえ</button>
+       <button onclick="closeConfirmModal(true)" class="py-4 bg-red-600 hover:bg-red-500 text-white font-extrabold rounded-2xl text-lg active:scale-95 transition-transform shadow-lg shadow-red-600/30">はい</button>
      </div>
    </div>
  </div>
