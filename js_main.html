@@ -2,7 +2,7 @@
   /**
    * ==========================================
    * js_main.html (完全版・7:3せめぎ合い最適化)
-   * 🌟 1桁時間表示対応 / 縦型時系列アコーディオン / 完璧なバリデーション修復
+   * 🌟 1桁時間表示対応 / 縦型タイムライン / 決定ボタンバグの完全解消
    * ==========================================
    */
 
@@ -77,68 +77,70 @@
     return b + '<circle cx="12" cy="12" r="5"></circle></svg>';
   }
 
-  // 🌟 天気ミニバッジ (右上はみ出し、2段構成、輪郭着色)
+  // 🌟 天気ミニバッジ (天気を1段目、気温を2段目、右上はみ出し、輪郭に枠線)
   function makeWeatherBadge(wStr, colorClass) {
     if(!wStr || wStr.trim() === "" || wStr === "---") return '';
     var parts = wStr.split(/\s+/);
     var icon = parts[0] || '🌤️';
     var temp = parts[1] || '--℃';
-    return '<div class="absolute top-[-8px] right-[28px] z-40 bg-gray-950 border-2 ' + (colorClass || 'border-amber-500/80') + ' rounded-lg py-1 px-1.5 flex flex-col items-center leading-none shadow-md shadow-black shrink-0">' +
+    return '<div class="absolute top-[-10px] right-[28px] z-40 bg-gray-950 border-2 ' + (colorClass || 'border-amber-500/80') + ' rounded-lg py-1 px-1.5 flex flex-col items-center leading-none shadow-md shadow-black shrink-0">' +
              '<span class="text-sm">' + icon + '</span>' +
              '<span class="text-[9px] font-black text-gray-200 mt-0.5">' + temp + '</span>' +
            '</div>';
   }
 
-  // 🌟 時系列五角形アンプ調タイムライン (丸み、隙間5px、上層下層の重ね合わせ、斜線上辺ハイライト)
+  // 🌟 時系列五角形アンプ調タイムライン (フラット背景・縦文字サイズアップ・極小ハイライト配置)
   function getTimelinePanelHTML(startTime, busTime, arrTime, wStart, wBus, wArr) {
-    // 隙間5px
+    var clipPoly = 'clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 50%, calc(100% - 16px) 100%, 0 100%);';
     var h = '<div class="flex mt-1.5 gap-[5px] w-full relative select-none">';
     
-    // 1. 出発（お家 ⇨ 出発へ変更） - 高さを5分の1カットの80px、z-index: 30
+    // 1. 出発 (お家 ⇨ 出発) - グラデーションOFF・縦文字を13pxへ大きく
     h += '<div class="flex-1 relative h-[80px] z-30 shadow-[4px_0_10px_rgba(0,0,0,0.8)] bg-gray-500 rounded-l-xl p-[1.5px]">';
-    h += makeWeatherBadge(wStart, 'border-gray-500'); // はみ出しミニバッジ
+    h += makeWeatherBadge(wStart, 'border-gray-500'); 
     h +=   '<div class="w-full h-full flex items-stretch bg-gray-950 rounded-l-xl overflow-hidden">';
     h +=     '<div class="flex-1 flex flex-col items-center justify-center relative pr-4 pl-1">';
     h +=       getSvgForIcon('home', 'w-7 h-7 text-gray-400 mb-0.5');
     h +=       '<span class="font-black text-amber-400 text-lg tracking-tight leading-none">' + formatTimeNoZero(startTime) + '</span>';
     h +=     '</div>';
-    h +=     '<div class="w-[32px] bg-gradient-to-b from-gray-500 via-gray-300 to-gray-600 flex items-center justify-center border-l border-gray-600 shadow-inner shrink-0">';
-    h +=       '<span style="writing-mode:vertical-rl;text-orientation:upright;" class="text-[11px] font-black text-gray-900 tracking-widest mr-0.5">出 発</span>';
+    h +=     '<div class="w-[32px] bg-gray-700 flex items-center justify-center border-l border-gray-600 shadow-inner shrink-0">'; // グラデーションOFFのフラットな灰色
+    h +=       '<span style="writing-mode:vertical-rl;text-orientation:upright;" class="text-[13px] font-black text-gray-900 tracking-widest mr-0.5">出 発</span>';
     h +=     '</div>';
     h +=   '</div>';
-    // 右向き重ね合わせ尖り矢印（斜め上辺ハイライト反射付き）
+    // 矢印先端の重なり三角形：斜め上辺ハイライトと極小の白い光点
     h +=   '<div class="absolute top-0 right-[-14px] w-[15px] h-full z-40" style="clip-path: polygon(0 0, 100% 50%, 0 100%); background: #6b7280;">';
     h +=     '<div class="absolute inset-0 bg-white/20" style="clip-path: polygon(0 0, 100% 50%, 0 10%);"></div>';
+    h +=     '<div class="absolute w-[2px] h-[2px] bg-white rounded-full" style="top: 50%; left: calc(100% - 3px); transform: translateY(-50%);"></div>'; // 光の微細点
     h +=   '</div>';
     h += '</div>';
     
-    // 2. バス - 天気不要、z-index: 20
+    // 2. バス - 天気不要、グラデーションOFF
     h += '<div class="flex-1 relative h-[80px] z-20 shadow-[4px_0_10px_rgba(0,0,0,0.8)] bg-blue-500 p-[1.5px]">';
     h +=   '<div class="w-full h-full flex items-stretch bg-gray-950 overflow-hidden">';
     h +=     '<div class="flex-1 flex flex-col items-center justify-center relative pr-4 pl-4">';
-    h +=       getSvgForIcon('bus', 'w-8 h-8 text-blue-400 mb-0.5'); // 新しい横型対称バス
+    h +=       getSvgForIcon('bus', 'w-8 h-8 text-blue-400 mb-0.5'); 
     h +=       '<span class="font-black text-blue-300 text-lg tracking-tight leading-none">' + formatTimeNoZero(busTime) + '</span>';
     h +=     '</div>';
-    h +=     '<div class="w-[32px] bg-gradient-to-b from-blue-300 via-blue-100 to-blue-400 flex items-center justify-center border-l border-gray-600 shadow-inner shrink-0">';
-    h +=       '<span style="writing-mode:vertical-rl;text-orientation:upright;" class="text-[11px] font-black text-gray-900 tracking-widest mr-0.5">バ ス</span>';
+    h +=     '<div class="w-[32px] bg-blue-800 flex items-center justify-center border-l border-gray-600 shadow-inner shrink-0">'; // フラット青
+    h +=       '<span style="writing-mode:vertical-rl;text-orientation:upright;" class="text-[13px] font-black text-gray-900 tracking-widest mr-0.5">バ ス</span>';
     h +=     '</div>';
     h +=   '</div>';
-    // 右向き重ね合わせ尖り矢印（斜め上辺ハイライト反射付き）
+    // 矢印先端の重なり三角形：斜め上辺ハイライトと極小の白い光点
     h +=   '<div class="absolute top-0 right-[-14px] w-[15px] h-full z-40" style="clip-path: polygon(0 0, 100% 50%, 0 100%); background: #3b82f6;">';
     h +=     '<div class="absolute inset-0 bg-white/20" style="clip-path: polygon(0 0, 100% 50%, 0 10%);"></div>';
+    h +=     '<div class="absolute w-[2px] h-[2px] bg-white rounded-full" style="top: 50%; left: calc(100% - 3px); transform: translateY(-50%);"></div>';
     h +=   '</div>';
     h += '</div>';
     
-    // 3. 到着 - z-index: 10（最後尾のため、右の重ね合わせ尖りは不要。右角丸の綺麗な仕上がり）
+    // 3. 到着 - z-index: 10（最後尾、グラデーションOFF）
     h += '<div class="flex-1 relative h-[80px] z-10 shadow-[4px_0_10px_rgba(0,0,0,0.8)] bg-green-500 rounded-r-xl p-[1.5px]">';
-    h += makeWeatherBadge(wArr, 'border-green-500'); // はみ出しミニバッジ
+    h += makeWeatherBadge(wArr, 'border-green-500'); 
     h +=   '<div class="w-full h-full flex items-stretch bg-gray-950 rounded-r-xl overflow-hidden">';
     h +=     '<div class="flex-1 flex flex-col items-center justify-center relative pr-4 pl-4">';
     h +=       getSvgForIcon('hospital', 'w-7 h-7 text-green-400 mb-0.5');
     h +=       '<span class="font-black text-green-400 text-lg tracking-tight leading-none">' + formatTimeNoZero(arrTime) + '</span>';
     h +=     '</div>';
-    h +=     '<div class="w-[32px] bg-gradient-to-b from-green-300 via-green-100 to-green-400 flex items-center justify-center border-l border-gray-600 shadow-inner shrink-0">';
-    h +=       '<span style="writing-mode:vertical-rl;text-orientation:upright;" class="text-[11px] font-black text-gray-900 tracking-widest mr-0.5">到 着</span>';
+    h +=     '<div class="w-[32px] bg-green-800 flex items-center justify-center border-l border-gray-600 shadow-inner shrink-0">'; // フラット緑
+    h +=       '<span style="writing-mode:vertical-rl;text-orientation:upright;" class="text-[13px] font-black text-gray-900 tracking-widest mr-0.5">到 着</span>';
     h +=     '</div>';
     h +=   '</div>';
     h += '</div>';
@@ -147,11 +149,11 @@
     return h;
   }
 
-  // 🌟 Form専用：縦型時系列タイムライン（折りたたみアコーディオン対応）
-  function getVerticalTimelineHTML(startTime, busTime, arrTime, wStart, wBus, wArr) {
+  // 🌟 Form専用：縦型タイムライン (構成順：出発 ⇨ バス停 ⇨ 目的地 ⇨ 滞在 ⇨ 帰宅、天気は出発・目的地・帰宅の3箇所)
+  function getVerticalTimelineHTML(startTime, busTime, arrTime, wStart, wBus, wArr, stayText, retTime, wRet) {
     var h = '<div class="flex flex-col gap-4 pl-2 w-full text-gray-200 select-none">';
     
-    // 1. 出発
+    // 1. 出発 (出発時間 ＋ 天気予報)
     h += '<div class="flex items-center gap-4 relative">';
     h +=   '<div class="w-12 h-12 bg-gray-900 border-2 border-gray-500 rounded-full flex items-center justify-center shrink-0 shadow-lg z-10">' + getSvgForIcon('home', 'w-6 h-6 text-gray-400') + '</div>';
     h +=   '<div class="flex-1 bg-gray-950 border border-gray-800 rounded-xl p-3 flex justify-between items-center shadow-md">';
@@ -162,23 +164,49 @@
     h +=   '<div class="absolute left-6 top-12 bottom-[-16px] w-[2px] bg-gray-800 z-0"></div>';
     h += '</div>';
 
-    // 2. バス
+    // 2. バス停 (バス時刻)
     h += '<div class="flex items-center gap-4 relative">';
     h +=   '<div class="w-12 h-12 bg-gray-900 border-2 border-blue-500 rounded-full flex items-center justify-center shrink-0 shadow-lg z-10">' + getSvgForIcon('bus', 'w-6 h-6 text-blue-400') + '</div>';
     h +=   '<div class="flex-1 bg-gray-950 border border-gray-800 rounded-xl p-3 flex justify-between items-center shadow-md">';
     h +=     '<span class="font-black text-xl text-blue-300">' + formatTimeNoZero(busTime) + '</span>';
-    h +=     '<span class="text-xs text-gray-400 font-bold bg-gray-900 px-2 py-1 rounded">宮戸橋</span>';
+    h +=     '<span class="text-xs text-gray-400 font-bold bg-gray-900 px-2 py-1 rounded">バス停</span>';
     h +=   '</div>';
     h +=   '<div class="absolute left-6 top-12 bottom-[-16px] w-[2px] bg-gray-800 z-0"></div>';
     h += '</div>';
 
-    // 3. 到着
+    // 3. 目的地 (到着時間 ＋ 目的地名 ＋ 天気予報)
+    var dName = currentCandidate ? currentCandidate.name : "目的地";
     h += '<div class="flex items-center gap-4 relative">';
     h +=   '<div class="w-12 h-12 bg-gray-900 border-2 border-green-500 rounded-full flex items-center justify-center shrink-0 shadow-lg z-10">' + getSvgForIcon('hospital', 'w-6 h-6 text-green-400') + '</div>';
     h +=   '<div class="flex-1 bg-gray-950 border border-gray-800 rounded-xl p-3 flex justify-between items-center shadow-md">';
-    h +=     '<span class="font-black text-xl text-green-400">' + formatTimeNoZero(arrTime) + '</span>';
-    h +=     '<span class="text-xs text-gray-400 font-bold bg-gray-900 px-2 py-1 rounded">到着</span>';
-    if(wArr) h += '<span class="text-xs font-bold text-gray-300 flex items-center gap-1 bg-gray-900 px-2 py-1 rounded border border-green-500/30">' + wArr + '</span>';
+    h +=     '<div class="flex flex-col gap-0.5">';
+    h +=       '<span class="font-black text-xl text-green-400 leading-none">' + formatTimeNoZero(arrTime) + '</span>';
+    h +=       '<span class="text-[11px] font-bold text-gray-400 tracking-wider truncate max-w-[120px] mt-1">' + dName + '</span>';
+    h +=     '</div>';
+    h +=     '<span class="text-xs text-gray-400 font-bold bg-gray-900 px-2 py-1 rounded shrink-0">到着</span>';
+    if(wArr) h += '<span class="text-xs font-bold text-gray-300 flex items-center gap-1 bg-gray-900 px-2 py-1 rounded border border-green-500/30 shrink-0">' + wArr + '</span>';
+    h +=   '</div>';
+    h +=   '<div class="absolute left-6 top-12 bottom-[-16px] w-[2px] bg-gray-800 z-0"></div>';
+    h += '</div>';
+
+    // 4. 滞在 (滞在時間)
+    var sVal = stayText || "---";
+    h += '<div class="flex items-center gap-4 relative">';
+    h +=   '<div class="w-12 h-12 bg-gray-900 border-2 border-purple-500 rounded-full flex items-center justify-center shrink-0 shadow-lg z-10">' + getSvgForIcon('clock', 'w-6 h-6 text-purple-400') + '</div>';
+    h +=   '<div class="flex-1 bg-gray-950 border border-gray-800 rounded-xl p-3 flex justify-between items-center shadow-md">';
+    h +=     '<span class="font-black text-xl text-purple-300">' + sVal + '</span>';
+    h +=     '<span class="text-xs text-gray-400 font-bold bg-gray-900 px-2 py-1 rounded">滞在</span>';
+    h +=   '</div>';
+    h +=   '<div class="absolute left-6 top-12 bottom-[-16px] w-[2px] bg-gray-800 z-0"></div>';
+    h += '</div>';
+
+    // 5. 帰宅 (帰宅時間 ＋ 天気予報)
+    h += '<div class="flex items-center gap-4 relative">';
+    h +=   '<div class="w-12 h-12 bg-gray-900 border-2 border-indigo-500 rounded-full flex items-center justify-center shrink-0 shadow-lg z-10">' + getSvgForIcon('home', 'w-6 h-6 text-indigo-400') + '</div>';
+    h +=   '<div class="flex-1 bg-gray-950 border border-gray-800 rounded-xl p-3 flex justify-between items-center shadow-md">';
+    h +=     '<span class="font-black text-xl text-indigo-300">' + formatTimeNoZero(retTime) + '</span>';
+    h +=     '<span class="text-xs text-gray-400 font-bold bg-gray-900 px-2 py-1 rounded">帰宅</span>';
+    if(wRet) h += '<span class="text-xs font-bold text-gray-300 flex items-center gap-1 bg-gray-900 px-2 py-1 rounded border border-indigo-500/30">' + wRet + '</span>';
     h +=   '</div>';
     h += '</div>';
 
@@ -202,24 +230,28 @@
     if (isFirstStepCompleted) setTimeout(function(){ adjustInputContainerY(); }, 50);
   }
 
-  // 🌟 タイトルのX軸回転アニメーション
-  function animateTitle(newText) {
-    var t = document.getElementById('nav-title'); if(!t) return;
-    t.style.transition = 'transform 0.25s ease-in';
-    t.style.transform = 'translate(-50%, 0) rotateX(90deg)';
-    setTimeout(function(){
-      t.innerText = newText;
-      t.style.transition = 'transform 0.25s ease-out';
-      t.style.transform = 'translate(-50%, 0) rotateX(0deg)';
-    }, 250);
-  }
-
   function goToFormScreen() {
     try {
       resetFormValues();
       var deck = document.getElementById('screen-deck'), form = document.getElementById('screen-form');
       var backBtn = document.getElementById('nav-back-btn'), newBtn = document.getElementById('nav-new-btn'), clearBtn = document.getElementById('nav-clear-btn');
       
+      // 目的地(STEP 1)入力中は、上部目的地情報、アコーディオン、バッジメーターをすべて完全に隠して罠の準備
+      var pDest = document.getElementById('preview-dest-area');
+      var pTime = document.getElementById('timeline-area-wrapper');
+      var pBadg = document.getElementById('badge-area');
+      if (pDest) pDest.style.display = 'none';
+      if (pTime) pTime.style.display = 'none';
+      if (pBadg) pBadg.style.display = 'none';
+
+      // 入力エリアを画面中央・最上部に配置
+      var iC = document.getElementById('input-container');
+      if (iC) {
+        iC.style.position = 'relative';
+        iC.style.top = '0px';
+        iC.style.height = 'auto';
+      }
+
       if(deck && form) {
         playAnimation(deck, 'anim-scale-out', 300, function(){
           deck.classList.add('hidden'); deck.classList.remove('flex');
@@ -295,7 +327,6 @@
 
           h += '<div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 shadow-lg flex flex-col relative mt-3">' + bHtml;
           
-          // 目的地名と、右端の🗑️（削除のみ・📝削除対応）
           h += '<div class="flex justify-between items-center mb-2 gap-3">';
           h +=   '<h3 class="text-2xl font-black text-gray-100 leading-tight tracking-widest break-words flex-1">' + item.name + '</h3>';
           h +=   '<div class="flex shrink-0">';
@@ -303,7 +334,6 @@
           h +=   '</div>';
           h += '</div>';
           
-          // 住所表記を完全に排除し、そこに「日付」を配置
           h += '<div class="flex flex-col gap-1.5 mb-3.5">';
           h +=   '<div class="flex items-center gap-1.5 text-lg font-black text-blue-400">' + getSvgForIcon('clock', 'w-5 h-5 shrink-0') + dateStr + '</div>';
           
@@ -314,7 +344,6 @@
           }
           h += '</div>';
           
-          // タイムライン描画
           h += getTimelinePanelHTML(item.startTime||"--:--", item.busTime||"--:--", item.arrTime||"--:--", "☀️ --℃", "☀️ --℃", "☀️ --℃");
 
           h += '</div>';
@@ -357,9 +386,8 @@
     panel.style.transform = 'none'; void panel.offsetWidth;
     var pRect = panel.getBoundingClientRect(), cRect = inputC.getBoundingClientRect(), tx = 0, ty = 0;
     
-    // バッジエリアとの位置基準調整
     var badgeArea = document.getElementById('badge-area');
-    var baseTop = badgeArea ? (badgeArea.offsetTop + badgeArea.offsetHeight + 16) : 280;
+    var baseTop = badgeArea ? (badgeArea.offsetTop + badgeArea.offsetHeight + 14) : 280; // バッジエリア下隣14pxに完全固定
     var deltaY = baseTop - cRect.top; 
     
     if (badge) {
@@ -375,12 +403,14 @@
 
   function smoothScrollToContainer() { setTimeout(function() { var i = document.getElementById('input-container'); if(i) { var r = i.getBoundingClientRect(); if (r.bottom > window.innerHeight) window.scrollBy({ top: r.bottom - window.innerHeight + 24, behavior: 'smooth' }); } }, 150); }
 
+  // 🌟 【不具合解消】入力エリアをバッジエリアの下隣「14px」に完全に吸着させる
   function adjustInputContainerY() {
     if (!isFirstStepCompleted) return;
     var badgeArea = document.getElementById('badge-area'), iC = document.getElementById('input-container');
     if (badgeArea && iC) {
-      var baseTop = badgeArea.offsetTop + badgeArea.offsetHeight + 16; 
-      iC.style.transition = (iC.style.top === "16px" || iC.style.top === "") ? 'top 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)' : 'top 0.3s ease-out';
+      var baseTop = badgeArea.offsetTop + badgeArea.offsetHeight + 14; // 隣同士にぴったり吸い付かせる (14px)
+      iC.style.position = 'absolute';
+      iC.style.transition = (iC.style.top === "" || iC.style.top === "0px") ? 'top 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)' : 'top 0.3s ease-out';
       iC.style.top = baseTop + 'px';
       var aH = 0;
       var measure = function(p, z) { if(!p) return 0; var oD=p.style.display, oV=p.style.visibility; if(oD==='none'||oD===''){p.style.visibility='hidden'; p.style.display='flex';} void p.offsetWidth; var h=p.offsetHeight+(z||0); if(oD==='none'||oD===''){p.style.display='none'; p.style.visibility=oV;} return h; };
@@ -477,23 +507,110 @@
       var isE=(editingStep!==null);
       if(isE) { if(s>=1&&s<=4){ if(checkValuesChanged()){if(maxReachedStep>=5){isRouteDirty=true;isWeatherDirty=true;} if(hasSubmitted)isConfirmDirty=true;} } if(s===2)isDateDirty=false; if(s===3)isBusDirty=false; if(s===5)isRouteDirty=false; if(s===6)isConfirmDirty=false; }
       
-      if(s===1&&!isFirstStepCompleted) {
+      // 🌟 目的地(STEP 1)決定時の罠ギミック着火
+      if(s===1 && !isFirstStepCompleted) {
           currentStep=2; maxReachedStep=2; 
           if(!document.getElementById('date-input').value) document.getElementById('date-input').value = new Date(Date.now()-(new Date().getTimezoneOffset()*60000)).toISOString().split('T')[0];
           updateDayInfoAndValidate(); 
+          
+          // 目的地決定後にカチッと表示。罠の始まり
+          var pDest = document.getElementById('preview-dest-area');
+          var pTime = document.getElementById('timeline-area-wrapper');
+          var pBadg = document.getElementById('badge-area');
+          if (pDest) { pDest.style.display = 'flex'; playAnimation(pDest, 'anim-slide-down-in', 600); }
+          if (pTime) { pTime.style.display = 'block'; }
+          if (pBadg) { pBadg.style.display = 'block'; }
+
+          // 入力エリアを absolute へ移行し、バッジエリア直下に吸い込み配置
+          var iC = document.getElementById('input-container');
+          if (iC) { iC.style.position = 'absolute'; }
+
           setTransformVarsDynamic(p,1,0,'suck'); setTimeout(function(){applyBadgeGreenPop(1);},600);
-          playAnimation(p,'anim-suck',800,function(){ resetPanelStyles(p); isFirstStepCompleted=true; updateBadges(); adjustInputContainerY(); requestAnimationFrame(function(){requestAnimationFrame(function(){var nP=document.getElementById('step-2'); if(!nP)return; nP.style.opacity='0'; nP.style.display='flex'; nP.style.zIndex='20'; setTransformVarsDynamic(nP,2,0,'pop'); applyPanelErrorStyle(nP,2); playAnimation(nP,'anim-slide-up-in',800,function(){nP.style.opacity='';}); smoothScrollToContainer(); validateStep();});}); }); return;
+          playAnimation(p,'anim-suck',800,function(){ 
+            resetPanelStyles(p); 
+            isFirstStepCompleted=true; 
+            updateBadges(); 
+            adjustInputContainerY(); 
+            requestAnimationFrame(function(){
+              requestAnimationFrame(function(){
+                var nP=document.getElementById('step-2'); if(!nP)return; 
+                nP.style.opacity='0'; nP.style.display='flex'; nP.style.zIndex='20'; 
+                setTransformVarsDynamic(nP,2,0,'pop'); applyPanelErrorStyle(nP,2); 
+                playAnimation(nP,'anim-slide-up-in',800,function(){nP.style.opacity='';}); 
+                smoothScrollToContainer(); validateStep();
+              });
+            }); 
+          }); return;
       }
       
-      if(!isE&&s!=='weather') {
-          var nS=s+1; if(s!==5) { setTransformVarsDynamic(p,s,0,'suck'); setTimeout(function(){applyBadgeGreenPop(s);},600); playAnimation(p,'anim-suck',800,function(){ resetPanelStyles(p); currentStep=nS; if(nS>maxReachedStep)maxReachedStep=nS; updateBadges(); adjustInputContainerY(); requestAnimationFrame(function(){requestAnimationFrame(function(){var nP=document.getElementById('step-'+getStepIdStr(nS)); if(!nP)return; nP.style.opacity='0'; nP.style.display='flex'; nP.style.zIndex='20'; setTransformVarsDynamic(nP,nS,0,'pop'); applyPanelErrorStyle(nP,nS); playAnimation(nP,'anim-slide-up-in',800,function(){nP.style.opacity='';}); if(nS===5)startRouteSearch(); smoothScrollToContainer(); validateStep();});}); }); return; }
+      if(!isE && s!=='weather') {
+          var nS=s+1; 
+          if(s!==5) { 
+              setTransformVarsDynamic(p,s,0,'suck'); setTimeout(function(){applyBadgeGreenPop(s);},600); 
+              playAnimation(p,'anim-suck',800,function(){ 
+                resetPanelStyles(p); currentStep=nS; if(nS>maxReachedStep)maxReachedStep=nS; 
+                updateBadges(); adjustInputContainerY(); 
+                requestAnimationFrame(function(){
+                  requestAnimationFrame(function(){
+                    var nP=document.getElementById('step-'+getStepIdStr(nS)); if(!nP)return; 
+                    nP.style.opacity='0'; nP.style.display='flex'; nP.style.zIndex='20'; 
+                    setTransformVarsDynamic(nP,nS,0,'pop'); applyPanelErrorStyle(nP,nS); 
+                    playAnimation(nP,'anim-slide-up-in',800,function(){nP.style.opacity='';}); 
+                    if(nS===5) startRouteSearch(); 
+                    smoothScrollToContainer(); validateStep();
+                  });
+                }); 
+              }); return; 
+          }
       }
       
-      if(isE&&s>=1&&s<=4) { var z=60*(openEditPanels.indexOf(s)+1); setTransformVarsDynamic(p,s,z,'suck'); setTimeout(function(){applyBadgeGreenPop(s);},600); playAnimation(p,'anim-suck',800,function(){ resetPanelStyles(p); closeEditPanel(s); enforceErrorPanels(); reorderEditPanels(); if(!openErrorPanelIfNeeded()){adjustInputContainerY(); updateBadges(); validateStep();} }); return; }
+      if(isE && s>=1 && s<=4) { 
+          var z=60*(openEditPanels.indexOf(s)+1); 
+          setTransformVarsDynamic(p,s,z,'suck'); setTimeout(function(){applyBadgeGreenPop(s);},600); 
+          playAnimation(p,'anim-suck',800,function(){ 
+            resetPanelStyles(p); closeEditPanel(s); enforceErrorPanels(); reorderEditPanels(); 
+            if(!openErrorPanelIfNeeded()){adjustInputContainerY(); updateBadges(); validateStep();} 
+          }); return; 
+      }
 
-      if(s===5) { setTransformVarsDynamic(p,5,(isE?60*(openEditPanels.indexOf(5)+1):0),'suck'); setTimeout(function(){applyBadgeGreenPop(5);},600); playAnimation(p,'anim-suck',800,function(){ resetPanelStyles(p); isRouteDirty=false; if(hasSubmitted)isConfirmDirty=true; var mB=document.getElementById('preview-map-buttons'); if(mB)mB.style.display='flex'; var c=checkValuesChanged()||isWeatherDirty; if(isE){ closeEditPanel(5); enforceErrorPanels(); reorderEditPanels(); if(c){isWeatherDirty=true;fetchWeather(true);} } else { maxReachedStep=6; currentStep=6; fetchWeather(false); } updateBadges(); if(!isE){ requestAnimationFrame(function(){requestAnimationFrame(function(){var cP=document.getElementById('step-6'); if(!cP)return; cP.style.opacity='0'; cP.style.display='flex'; cP.classList.remove('edit-overlay'); setTransformVarsDynamic(cP,6,0,'pop'); playAnimation(cP,'anim-slide-up-in',800,function(){cP.style.opacity='';}); setTimeout(function(){adjustInputContainerY();},50); smoothScrollToContainer(); validateStep();});}); } else { if(!c)adjustInputContainerY(); openErrorPanelIfNeeded(); } }); return; }
+      // ルート決定後の遷移の確実な連動制御
+      if(s===5) { 
+          setTransformVarsDynamic(p,5,(isE?60*(openEditPanels.indexOf(5)+1):0),'suck'); setTimeout(function(){applyBadgeGreenPop(5);},600); 
+          playAnimation(p,'anim-suck',800,function(){ 
+            resetPanelStyles(p); isRouteDirty=false; if(hasSubmitted)isConfirmDirty=true; 
+            var c=checkValuesChanged()||isWeatherDirty; 
+            if(isE){ 
+              closeEditPanel(5); enforceErrorPanels(); reorderEditPanels(); 
+              if(c){isWeatherDirty=true; fetchWeather(true);} 
+            } else { 
+              maxReachedStep=6; currentStep=6; fetchWeather(false); 
+            } 
+            updateBadges(); 
+            if(!isE){ 
+              requestAnimationFrame(function(){
+                requestAnimationFrame(function(){
+                  var cP=document.getElementById('step-6'); if(!cP)return; 
+                  cP.style.opacity='0'; cP.style.display='flex'; cP.classList.remove('edit-overlay'); 
+                  setTransformVarsDynamic(cP,6,0,'pop'); 
+                  playAnimation(cP,'anim-slide-up-in',800,function(){cP.style.opacity='';}); 
+                  setTimeout(function(){adjustInputContainerY();},50); 
+                  smoothScrollToContainer(); validateStep();
+                });
+              }); 
+            } else { 
+              if(!c)adjustInputContainerY(); openErrorPanelIfNeeded(); 
+            } 
+          }); return; 
+      }
 
-      if(s==='weather') { var z=60*(openEditPanels.indexOf(s)+1); setTransformVarsDynamic(p,s,z,'suck'); setTimeout(function(){applyBadgeGreenPop(s);},600); playAnimation(p,'anim-suck',800,function(){ resetPanelStyles(p); closeEditPanel(s); enforceErrorPanels(); reorderEditPanels(); adjustInputContainerY(); updateBadges(); validateStep(); }); return; }
+      if(s==='weather') { 
+          var z=60*(openEditPanels.indexOf(s)+1); 
+          setTransformVarsDynamic(p,s,z,'suck'); setTimeout(function(){applyBadgeGreenPop(s);},600); 
+          playAnimation(p,'anim-suck',800,function(){ 
+            resetPanelStyles(p); closeEditPanel(s); enforceErrorPanels(); reorderEditPanels(); 
+            adjustInputContainerY(); updateBadges(); validateStep(); 
+          }); return; 
+      }
     } catch(e) { if(s===1){currentStep=2;maxReachedStep=2;isFirstStepCompleted=true;tapBadge(2);}else if(s===2){currentStep=3;maxReachedStep=3;tapBadge(3);}else if(s===3){currentStep=4;maxReachedStep=4;tapBadge(4);}else if(s===4){currentStep=5;maxReachedStep=5;tapBadge(5);} }
   }
 
@@ -524,56 +641,6 @@
     var d=false, fn=function(suc,res){ if(d)return; d=true; try{ if(suc&&res&&res.success&&res.routes&&res.routes.length>0){renderRoutes(res.routes);}else{if(l)l.innerHTML='<div class="text-red-400 p-4 text-center text-lg font-bold w-full">'+(res&&res.message?res.message:'経路が見つかりませんでした')+'</div>';} }catch(e){renderRoutes([{summary:"バス(〇〇線) ⇨ 電車(〇〇線)\n(45分 / 5.2km)",durationMinutes:45}]);} smoothScrollToContainer(); };
     var tm=setTimeout(function(){if(!d)fn(false,{message:'タイムアウトしました'});},8000);
     if(typeof google!=='undefined') google.script.run.withSuccessHandler(function(r){clearTimeout(tm);fn(true,r);}).withFailureHandler(function(e){clearTimeout(tm);fn(false,e);}).getRoutesForWeb(dStr,tStr,dest); else setTimeout(function(){clearTimeout(tm);fn(false);},800);
-  }
-
-  function fetchWeather(isRe) {
-    try {
-      var dStr=document.getElementById('date-input').value, bS=document.getElementById('bus-time-select'), tStr=bS&&bS.value?bS.value:"12:00", dest=currentCandidate?currentCandidate.address:"", dB=document.getElementById('weather-detail-content'), b=document.getElementById('badge-weather');
-      if(!dStr||!dest)return; if(dB)dB.innerHTML='<div class="text-center w-full"><span class="animate-spin inline-block text-3xl">⏳</span><br/>取得中...</div>'; if(b)b.dataset.completed='false';
-      if(isRe)isWeatherDirty=true; else isWeatherDirty=false; updateBadges();
-      
-      var hS=function(r){ 
-        if(r&&r.icon){ 
-          var s=getSvgForWeather(r.icon); 
-          if(dB){ 
-            dB.innerHTML='<div class="flex-1 bg-gray-800 rounded-xl p-4 border border-gray-600 shadow-inner flex flex-col items-center"><div class="text-[12px] font-bold text-gray-400 mb-2">出発</div><div class="w-10 h-10 text-blue-300 mb-2">'+s+'</div><div class="text-2xl font-black text-white">'+r.temp+'℃</div></div>' +
-                         '<div class="flex-1 bg-gray-800 rounded-xl p-4 border border-gray-600 shadow-inner flex flex-col items-center"><div class="text-[12px] font-bold text-gray-400 mb-2">到着</div><div class="w-10 h-10 text-green-400 mb-2">'+s+'</div><div class="text-2xl font-black text-white">'+r.temp+'℃</div></div>' +
-                         '<div class="flex-1 bg-gray-800 rounded-xl p-4 border border-gray-600 shadow-inner flex flex-col items-center"><div class="text-[12px] font-bold text-gray-400 mb-2">帰宅</div><div class="w-10 h-10 text-purple-300 mb-2">'+s+'</div><div class="text-2xl font-black text-white">'+r.temp+'℃</div></div>'; 
-          }
-          
-          window.previewWeatherStart = r.icon + " " + r.temp + "℃";
-          window.previewWeatherArr = r.icon + " " + r.temp + "℃";
-          
-          isWeatherDirty=false; 
-          if(b) b.dataset.completed='true';
-          
-          var cW=function(){ 
-            var w=openEditPanels.indexOf('weather'); 
-            if(w!==-1){
-              openEditPanels.splice(w,1); 
-              if(editingStep==='weather'){
-                editingStep=openEditPanels.length>0?openEditPanels[openEditPanels.length-1]:null; 
-                currentStep=editingStep||maxReachedStep;
-              } 
-              updateBadges(); 
-              var wp=document.getElementById('step-weather'); 
-              setTransformVarsDynamic(wp,'weather',60*w,'suck'); 
-              setTimeout(function(){applyBadgeGreenPop('weather');},600); 
-              playAnimation(wp,'anim-suck',800,function(){resetPanelStyles(wp);reorderEditPanels();adjustInputContainerY();});
-            } else {
-              updateBadges();
-              applyBadgeGreenPop('weather');
-            } 
-          };
-          if(window.isEnforcingErrors) window.pendingWeatherClose=cW; else cW();
-        } else { 
-          isWeatherDirty=true; 
-          updateBadges(); 
-          if(dB) dB.innerHTML='<div class="text-gray-400 p-4">取得失敗</div>'; 
-        }
-      };
-      if(typeof google!=='undefined') google.script.run.withSuccessHandler(hS).withFailureHandler(function(e){isWeatherDirty=true;updateBadges();if(dB)dB.innerHTML='<div class="text-red-400 p-4">通信エラー</div>';}).getWeatherForWeb(dest,dStr,tStr); else setTimeout(function(){hS({icon:"☀️",temp:"25"});},1200);
-    } catch(e) { console.error("fetchWeather Error:", e); }
   }
 
   // 🌟 タブの切り替え制御
@@ -656,30 +723,6 @@
     updateBadges();
   }
 
-  // 🌟 ルート検索結果候補の描画 (横スクロール仕様)
-  function renderRoutes(rs) {
-    var l=document.getElementById('route-candidates'); l.innerHTML=""; selectedRouteIndex=null; window.selectedRouteDuration=null;
-    rs.forEach(function(r, i){ 
-      var d=document.createElement('div'); 
-      d.className='route-card bg-gray-800 border-2 border-gray-600 rounded-xl p-4 cursor-pointer transition-all min-w-[85%] snap-center shrink-0'; 
-      d.innerHTML='<div class="font-black text-blue-400 text-xl mb-2">到着まで: '+r.durationMinutes+'分</div><div class="text-base text-gray-300 whitespace-pre-wrap leading-relaxed">'+r.summary+'</div>'; 
-      d.onclick=function(){
-        document.querySelectorAll('.route-card').forEach(function(c){c.classList.remove('bg-blue-900','border-blue-400');c.classList.add('bg-gray-800','border-gray-600');}); 
-        this.classList.remove('bg-gray-800','border-gray-600'); 
-        this.classList.add('bg-blue-900','border-blue-400'); 
-        selectedRouteIndex=i+1; 
-        window.selectedRouteDuration=r.durationMinutes; 
-        validateStep(); 
-        updatePreview(); 
-        updateBadges();
-      }; 
-      l.appendChild(d); 
-    }); 
-    validateStep(); 
-    updatePreview(); 
-    updateBadges();
-  }
-
   // 🌟 営業時間表示テキストの日本語化
   function formatBizTimeJp(bT, dS) {
     if(!bT||bT==="---")return "---"; var d=new Date(dS); if(isNaN(d.getTime()))return "---"; var tD=["日曜日","月曜日","火曜日","水曜日","木曜日","金曜日","土曜日"][d.getDay()], ls=String(bT).split('\n');
@@ -691,7 +734,7 @@
     if(!bT||!sT)return {start:"---",bus:"---",arr:"---",ret:"---"}; var p=bT.split(':'), h=parseInt(p[0],10), m=parseInt(p[1],10), s=parseInt(sT.replace('時間',''),10)||0, dur=dM||15, dB=new Date(); dB.setHours(h,m,0); var dS=new Date(dB.getTime()-5*60000), dA=new Date(dB.getTime()+dur*60000), dL=new Date(dA.getTime()+s*3600000), dR=new Date(dL.getTime()+dur*60000); var f=function(d){return d.getHours()+"時"+('0'+d.getMinutes()).slice(-2)+"分";}, fr=function(d){return d.getHours()+":"+('0'+d.getMinutes()).slice(-2);}; return {start:f(dS),rawStart:fr(dS),bus:f(dB),rawBus:fr(dB),arr:f(dA),rawArr:fr(dA),ret:f(dR),rawRet:fr(dR)};
   }
 
-  // 🌟 プレビュー表示の更新
+  // 🌟 プレビュー表示の更新 (アコーディオンタイトルの1行動的書き換え対応)
   function updatePreview() {
     try {
       var rD=document.getElementById('date-input').value, d=new Date(rD), jD=["日","月","火","水","木","金","土"];
@@ -699,15 +742,29 @@
       var sS=document.getElementById('stay-select'), bS=document.getElementById('bus-time-select'), sV=sS?sS.value:"", bV=bS?bS.value:"", ts={start:"---",bus:"---",arr:"---",ret:"---"}, dur=window.selectedRouteDuration!==null?window.selectedRouteDuration:15;
       if(bV&&bV!=="error"&&sV&&selectedRouteIndex!==null){ts=calculateTimesForPreview(bV,sV,dur); window.calculatedTimesRaw=ts;} else if(bV&&bV!=="error")ts.bus=String(bV).replace(':','時')+'分';
       
+      var mH=window.currentDayInfo?window.currentDayInfo.holiday||"":"", mS=window.currentDayInfo?window.currentDayInfo.seasonal||"":"";
+      
+      // 🌟 「予定タイムライン」の文字を「出発日」「祝日」「季節の行事」の1行並びに動的書き換え
+      var titleSpan = document.getElementById('timeline-collapse-title');
+      if (titleSpan) {
+        if (rD && !isNaN(d.getTime())) {
+          var formattedDate = d.getFullYear() + "/" + (d.getMonth() + 1) + "/" + d.getDate() + "(" + jD[d.getDay()] + ")";
+          var holText = mH ? " [祝:" + mH + "]" : "";
+          var seaText = mS ? " [" + mS + "]" : "";
+          titleSpan.innerText = formattedDate + holText + seaText;
+        } else {
+          titleSpan.innerText = "予定タイムライン";
+        }
+      }
+
       // 縦構成時系列(アコーディオン内)を更新
       var tVCont = document.getElementById('timeline-collapse-content');
       if (tVCont) {
         var wStart = window.previewWeatherStart || "";
         var wArr = window.previewWeatherArr || "";
-        tVCont.innerHTML = getVerticalTimelineHTML(ts.start, ts.bus, ts.arr, wStart, "", wArr);
+        tVCont.innerHTML = getVerticalTimelineHTML(ts.start, ts.bus, ts.arr, wStart, "", wArr, sV, ts.ret, wStart); // 帰宅天気は出発と同じ
       }
       
-      var mH=window.currentDayInfo?window.currentDayInfo.holiday||"":"", mS=window.currentDayInfo?window.currentDayInfo.seasonal||"":"";
       var hW=document.getElementById('preview-header-holiday-wrap');if(hW){if(mH){hW.innerHTML=getSvgForIcon('flag', 'w-3.5 h-3.5') + mH;hW.style.display="flex";}else hW.style.display="none";} 
       var sW=document.getElementById('preview-header-seasonal-wrap');if(sW){if(mS){sW.innerHTML='🌸 ' + mS;sW.style.display="flex";}else sW.style.display="none";}
       
@@ -724,7 +781,6 @@
     } catch(e) { console.error("updatePreview Error:", e); }
   }
 
-  // 🌟 GAS側への送信自動実行
   function executeCompleteAutomation() {
     if(!currentCandidate){showToast("⚠️ 目的地が選ばれていません！");return;} if(isDateDirty||isBusDirty||isRouteDirty||isConfirmDirty||isWeatherDirty){showToast("⚠️ 赤く光っている項目を確認してください");return;}
     var rD=document.getElementById('date-input').value, fD=""; if(rD){var p=rD.split('-');if(p.length===3)fD="'"+p[0]+"/"+p[1]+"/"+p[2];}
@@ -733,10 +789,13 @@
     if(typeof google!=='undefined') google.script.run.withSuccessHandler(function(r){showToast("✨ 完了しました！");if(sB){sB.innerHTML='<span>完了</span>';sB.classList.add('pointer-events-none','bg-gray-600');sB.classList.remove('bg-blue-600');}hasSubmitted=true;isConfirmDirty=false;updateBadges();setTimeout(goToDeckScreen,1500);}).withFailureHandler(function(e){showToast("❌ エラー: "+e.message);if(sB)sB.innerHTML='<span>送信</span>';}).executeFullAutomation(py,2); else setTimeout(function(){showToast("✨ 完了しました！");if(sB){sB.innerHTML='<span>完了</span>';sB.classList.add('pointer-events-none','bg-gray-600');sB.classList.remove('bg-blue-600');}hasSubmitted=true;isConfirmDirty=false;updateBadges();setTimeout(goToDeckScreen,1500);},1500);
   }
 
-  // 🌟 バリデーション判定ロジック (決定ボタンのON/OFF制御)
+  // 🌟 【不具合解消】決定ボタンのキー不一致（next-5とnext-routeの紐づけエラー）を完全に解消
   function validateStep() {
     var step = editingStep !== null ? editingStep : currentStep;
-    var btn = document.getElementById('btn-next-' + getStepIdStr(step));
+    var stepStr = getStepIdStr(step);
+    if (stepStr === "5") stepStr = "route"; // キー不一致の完全補正
+    
+    var btn = document.getElementById('btn-next-' + stepStr);
     var disabled = true;
     
     if (step === 1) {
@@ -760,6 +819,28 @@
     if (btn) {
       btn.disabled = disabled;
     }
+  }
+
+  // 🌟 各バッジへのピクトグラム＆日本語テキスト流し込み
+  function buildBadgeLayouts() {
+    var mapping = [
+      { id: '1', icon: 'map', label: 'どこ？' },
+      { id: '2', icon: 'calendar', label: 'いつ？' },
+      { id: '3', icon: 'clock', label: '何時？' },
+      { id: '4', icon: 'clock', label: '何時間？' },
+      { id: 'route', icon: 'map', label: '経路' },
+      { id: 'weather', icon: 'calendar', label: '天気' },
+      { id: 'confirm', icon: 'calendar', label: '保存' }
+    ];
+    mapping.forEach(function(item) {
+      var btn = document.getElementById('badge-' + item.id);
+      if (btn) {
+        var wrap = btn.querySelector('.icon-wrap');
+        var lbl = btn.querySelector('.badge-label');
+        if (wrap) wrap.innerHTML = getSvgForIcon(item.icon, 'w-6 h-6 shrink-0');
+        if (lbl) lbl.innerText = item.label;
+      }
+    });
   }
 
   // 🌟 ステップ移動可能かどうかの判定
@@ -889,7 +970,7 @@
   }
 
   function initAppUI() {
-    var sE=document.createElement('style'); sE.innerHTML="@keyframes slideUpIn{0%{transform:translateY(100vh);opacity:0}100%{transform:translateY(0);opacity:1}} @keyframes suckAnim{0%{transform:translateY(var(--z-offset,0px)) scale(1);opacity:1}100%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0}} @keyframes popAnim{0%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0}100%{transform:translateY(var(--z-offset,0px)) scale(1);opacity:1}} @keyframes slideLeftRightError{0%{transform:translateX(0) translateY(var(--z-offset,0px));opacity:1}40%{transform:translateX(-100%) translateY(var(--z-offset,0px));opacity:0}60%{transform:translateX(100%) translateY(var(--z-offset,0px));opacity:0}100%{transform:translateX(0) translateY(var(--z-offset,0px));opacity:1}} @keyframes scaleOut{0%{transform:scale(1);opacity:1}100%{transform:scale(0.8);opacity:0}} @keyframes scaleIn{0%{transform:scale(0.8);opacity:0}100%{transform:scale(1);opacity:1}} .anim-slide-up-in{animation:slideUpIn .8s cubic-bezier(.2,.8,.2,1) forwards!important} .anim-suck{animation:suckAnim .8s cubic-bezier(.4,0,.2,1) forwards!important} .anim-pop{animation:popAnim .8s cubic-bezier(.2,.8,.2,1) forwards!important} .anim-slide-error{animation:slideLeftRightError 1.8s cubic-bezier(.4,0,.2,1) forwards!important} .anim-pop-error{animation:popAnim 1.8s cubic-bezier(.2,.8,.2,1) forwards!important} .anim-scale-out{animation:scaleOut .3s cubic-bezier(.4,0,.2,1) forwards!important} .anim-scale-in{animation:scaleIn .3s cubic-bezier(.2,.8,.2,1) forwards!important} @keyframes shakeVibrate{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-5px) rotate(-5deg)}40%,80%{transform:translateX(5px) rotate(5deg)}} @keyframes flipOutY{0%{transform:perspective(400px) rotateY(0);opacity:1}100%{transform:perspective(400px) rotateY(90deg);opacity:0}} .anim-shake{animation:shakeVibrate .3s ease-in-out!important} .anim-flip-out{animation:flipOutY .4s ease-in forwards!important} .mini-badge{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 4px rgba(0,0,0,.5);z-index:10;pointer-events:none} .ok-mode{background:#10b981;color:white} .edit-mode{background:#fbbc04;color:#422006} .err-mode{background:#ef4444;color:white;border:2px solid #1f2937;font-size:12px;font-weight:bold}"; if(!document.head.querySelector('style'))document.head.appendChild(sE);
+    var sE=document.createElement('style'); sE.innerHTML="@keyframes slideUpIn{0%{transform:translateY(100vh);opacity:0}100%{transform:translateY(0);opacity:1}} @keyframes suckAnim{0%{transform:translateY(var(--z-offset,0px)) scale(1);opacity:1}100%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0}} @keyframes popAnim{0%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0}100%{transform:translateY(var(--z-offset,0px)) scale(1);opacity:1}} @keyframes slideLeftRightError{0%{transform:translateX(0) translateY(var(--z-offset,0px));opacity:1}40%{transform:translateX(-100%) translateY(var(--z-offset,0px));opacity:0}60%{transform:translateX(100%) translateY(var(--z-offset,0px));opacity:0}100%{transform:translateX(0) translateY(var(--z-offset,0px));opacity:1}} @keyframes scaleOut{0%{transform:scale(1);opacity:1}100%{transform:scale(0.8);opacity:0}} @keyframes scaleIn{0%{transform:scale(0.8);opacity:0}100%{transform:scale(1);opacity:1}} .anim-slide-up-in{animation:slideUpIn .8s cubic-bezier(.2,.8,.2,1) forwards!important} .anim-suck{animation:suckAnim .8s cubic-bezier(.4,0,.2,1) forwards!important} .anim-pop{animation:popAnim .8s cubic-bezier(.2,.8,.2,1) forwards!important} .anim-slide-error{animation:slideLeftRightError 1.8s cubic-bezier(.4,0,.2,1) forwards!important} .anim-pop-error{animation:popAnim 1.8s cubic-bezier(.2,.8,.2,1) forwards!important} .anim-scale-out{animation:scaleOut .3s cubic-bezier(.4,0,.2,1) forwards!important} .anim-scale-in{animation:scaleIn .3s cubic-bezier(.2,.8,.2,1) forwards!important} @keyframes shakeVibrate{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-5px) rotate(-5deg)}40%,80%{transform:translateX(5px) rotate(5deg)}} @keyframes flipOutY{0%{transform:perspective(400px) rotateY(0);opacity:1}100%{transform:perspective(400px) rotateY(90deg);opacity:0}} .anim-shake{animation:shakeVibrate .3s ease-in-out!important} .anim-flip-out{animation:flipOutY .4s ease-in forwards!important} .mini-badge{position:absolute;top:-4px;right:-4px;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 4px rgba(0,0,0,.5);z-index:10;pointer-events:none} .ok-mode{background:#10b981;color:white} .edit-mode{background:#fbbc04;color:#422006} .err-mode{background:#ef4444;color:white;border:2px solid #1f2937;font-size:11px;font-weight:bold}"; if(!document.head.querySelector('style'))document.head.appendChild(sE);
     
     try{ var nT = document.getElementById('nav-title'); if(nT){ nT.classList.remove('flex-1'); nT.className += " absolute left-1/2 -translate-x-1/2"; } } catch(e){}
     
@@ -902,6 +983,9 @@
       document.getElementById('step-5-icon').innerHTML = getSvgForIcon('map', 'w-6 h-6');
       document.getElementById('step-weather-icon').innerHTML = getSvgForIcon('calendar', 'w-6 h-6');
     } catch(e) {}
+
+    // バッジエリアレイアウト再構築の実行
+    buildBadgeLayouts();
 
     try{ var m=document.getElementById('tab-master-btn'), s=document.getElementById('tab-search-btn'); if(m&&m.innerHTML.indexOf('<svg')===-1)m.innerHTML=getSvgForIcon('list','w-7 h-7 shrink-0')+'<span>一覧</span>'; if(s&&s.innerHTML.indexOf('<svg')===-1)s.innerHTML=getSvgForIcon('search','w-7 h-7 shrink-0')+'<span>検索</span>'; }catch(e){}
     try{ var nN=document.getElementById('nav-new-btn');if(nN)nN.onclick=function(e){e.preventDefault();goToFormScreen();}; var nB=document.getElementById('nav-back-btn');if(nB)nB.onclick=function(e){e.preventDefault();goToDeckScreen();}; [{id:'btn-next-1',a:1},{id:'btn-next-2',a:2},{id:'btn-next-3',a:3},{id:'btn-next-4',a:4},{id:'btn-next-route',a:5}].forEach(function(i){var b=document.getElementById(i.id);if(b)b.onclick=function(e){e.preventDefault();handlePanelButton(i.a);};}); var bM=document.getElementById('btn-master-reg');if(bM)bM.onclick=function(e){e.preventDefault();if(currentCandidate)handlePanelButton(1);}; var bS=document.getElementById('submit-btn');if(bS)bS.onclick=function(e){e.preventDefault();executeCompleteAutomation();}; var bW=document.querySelector('#step-weather .ok-btn');if(bW)bW.onclick=function(e){e.preventDefault();handlePanelButton('weather');}; }catch(e){}

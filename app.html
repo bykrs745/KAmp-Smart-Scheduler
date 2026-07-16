@@ -42,8 +42,8 @@
    <!-- 📝 スクリーン2：Form (入力画面) -->
    <div id="screen-form" class="w-full flex-col relative hidden mt-3">
     
-     <!-- 🏷️ 【上部：目的地情報エリア】 -->
-     <div id="preview-dest-area" class="w-full bg-gray-900 border border-gray-800 shadow-xl rounded-2xl p-4 flex flex-col mb-3">
+     <!-- 🏷️ 【上部：目的地情報エリア】最初は非表示 -->
+     <div id="preview-dest-area" class="w-full bg-gray-900 border border-gray-800 shadow-xl rounded-2xl p-4 flex-col mb-3" style="display: none;">
        <div class="flex items-start gap-3">
          <div id="preview-dest-icon" class="w-10 h-10 rounded-full bg-blue-900/50 border border-blue-500 text-blue-300 flex items-center justify-center shrink-0 mt-1 shadow-sm">
             <svg viewBox="0 0 24 24" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
@@ -73,79 +73,88 @@
        </div>
      </div>
 
-     <!-- 🗺️ 【中部：時系列エリア（折りたたみアコーディオン式・縦構成）】 -->
-     <div id="timeline-area-wrapper" class="w-full mb-3">
+     <!-- 🗺️ 【中部：縦型時系列タイムライン（お母様向けアコーディオン式）】最初は非表示 -->
+     <div id="timeline-area-wrapper" class="w-full mb-3" style="display: none;">
        <button type="button" onclick="toggleTimelineCollapse()" class="w-full bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3 flex items-center justify-between text-gray-300 font-bold active:scale-98 transition-all shadow-md">
-         <span class="flex items-center gap-2">
-           <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-           <span class="text-base font-black tracking-widest">予定タイムライン</span>
+         <span class="flex items-center gap-2 min-w-0 flex-1">
+           <svg class="w-5 h-5 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+           <!-- 1行の中に「出発日」「祝日」「季節の行事」を自動で並べるヘッダー -->
+           <span id="timeline-collapse-title" class="text-sm font-black tracking-wider truncate text-left text-gray-100">予定タイムライン</span>
          </span>
-         <span id="timeline-collapse-icon" class="transition-transform duration-300">
+         <span id="timeline-collapse-icon" class="transition-transform duration-300 ml-2">
            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
          </span>
        </button>
        <div id="timeline-collapse-content" class="mt-2 w-full bg-gray-900/50 border border-gray-800 rounded-2xl p-4 hidden flex-col gap-3">
-         <!-- JSで縦型の時系列パネルが動的に挿入されます -->
+         <!-- JSで縦型の時系列パネル（出発・バス停・目的地・滞在・帰宅）が動的に挿入されます -->
        </div>
      </div>
 
-     <!-- 🎛️ 【中部：バッジエリア（正方形 4列×2段グリッド）】 -->
-     <div id="badge-area" class="w-full bg-gray-900 border border-gray-800 rounded-2xl p-3 shadow-lg mb-3">
-       <div class="grid grid-cols-4 gap-2.5">
+     <!-- 🎛️ 【中部：バッジエリア（平型 4列×2段グリッド）】最初は非表示 -->
+     <div id="badge-area" class="w-full bg-gray-900 border border-gray-800 rounded-2xl p-3 shadow-lg mb-3" style="display: none;">
+       <div class="grid grid-cols-4 gap-2">
          <!-- 1段目: 目的地, 日付, 時間, 滞在 -->
-         <div class="relative aspect-square">
-           <button id="badge-1" onclick="tapBadge(1)" class="badge-btn badge-wait w-full h-full" data-last-state="badge-wait">
-             <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+         <div class="relative">
+           <button id="badge-1" onclick="tapBadge(1)" class="badge-btn badge-wait w-full h-[68px]" data-last-state="badge-wait">
+             <span class="icon-wrap"></span>
+             <span class="badge-label">どこ？</span>
            </button>
            <div id="ok-1" class="mini-badge ok-mode" style="display:none;"></div>
          </div>
-         <div class="relative aspect-square">
-           <button id="badge-2" onclick="tapBadge(2)" class="badge-btn badge-wait w-full h-full" data-last-state="badge-wait">
-             <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+         <div class="relative">
+           <button id="badge-2" onclick="tapBadge(2)" class="badge-btn badge-wait w-full h-[68px]" data-last-state="badge-wait">
+             <span class="icon-wrap"></span>
+             <span class="badge-label">いつ？</span>
            </button>
            <div id="ok-2" class="mini-badge ok-mode" style="display:none;"></div>
          </div>
-         <div class="relative aspect-square">
-           <button id="badge-3" onclick="tapBadge(3)" class="badge-btn badge-wait w-full h-full" data-last-state="badge-wait">
-             <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+         <div class="relative">
+           <button id="badge-3" onclick="tapBadge(3)" class="badge-btn badge-wait w-full h-[68px]" data-last-state="badge-wait">
+             <span class="icon-wrap"></span>
+             <span class="badge-label">何時？</span>
            </button>
            <div id="ok-3" class="mini-badge ok-mode" style="display:none;"></div>
          </div>
-         <div class="relative aspect-square">
-           <button id="badge-4" onclick="tapBadge(4)" class="badge-btn badge-wait w-full h-full" data-last-state="badge-wait">
-             <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+         <div class="relative">
+           <button id="badge-4" onclick="tapBadge(4)" class="badge-btn badge-wait w-full h-[68px]" data-last-state="badge-wait">
+             <span class="icon-wrap"></span>
+             <span class="badge-label">何時間？</span>
            </button>
            <div id="ok-4" class="mini-badge ok-mode" style="display:none;"></div>
          </div>
          
-         <!-- 2段目: ルート, 天気, 確定, 破棄(キャンセル) -->
-         <div class="relative aspect-square">
-           <button id="badge-route" onclick="tapBadge(5)" class="badge-btn badge-wait w-full h-full" data-last-state="badge-wait">
-             <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+         <!-- 2段目: ルート, 天気, 確定, 破棄 -->
+         <div class="relative">
+           <button id="badge-route" onclick="tapBadge(5)" class="badge-btn badge-wait w-full h-[68px]" data-last-state="badge-wait">
+             <span class="icon-wrap"></span>
+             <span class="badge-label">経路</span>
            </button>
            <div id="ok-route" class="mini-badge ok-mode" style="display:none;"></div>
          </div>
-         <div class="relative aspect-square">
-           <button id="badge-weather" onclick="tapBadge('weather')" class="badge-btn badge-wait w-full h-full" data-completed="false" data-last-state="badge-wait">
-             <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg>
+         <div class="relative">
+           <button id="badge-weather" onclick="tapBadge('weather')" class="badge-btn badge-wait w-full h-[68px]" data-completed="false" data-last-state="badge-wait">
+             <span class="icon-wrap"></span>
+             <span class="badge-label">天気</span>
            </button>
            <div id="ok-weather" class="mini-badge ok-mode" style="display:none;"></div>
          </div>
-         <div class="relative aspect-square">
-           <button id="badge-confirm" onclick="tapBadge(6)" class="badge-btn badge-wait w-full h-full" data-last-state="badge-wait">
-             <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+         <div class="relative">
+           <button id="badge-confirm" onclick="tapBadge(6)" class="badge-btn badge-wait w-full h-[68px]" data-last-state="badge-wait">
+             <span class="icon-wrap"></span>
+             <span class="badge-label">保存</span>
            </button>
            <div id="ok-confirm" class="mini-badge ok-mode" style="display:none;"></div>
          </div>
-         <div class="relative aspect-square">
-           <button id="badge-cancel" onclick="cancelAllEdits()" class="badge-btn badge-wait w-full h-full shrink-0 bg-gray-800 text-gray-500 border border-gray-700 flex items-center justify-center" disabled data-last-state="inactive">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+         <div class="relative">
+           <button id="badge-cancel" onclick="cancelAllEdits()" class="badge-btn badge-wait w-full h-[68px] shrink-0 bg-gray-800 text-gray-500 border border-gray-700 flex flex-col items-center justify-center gap-0.5" disabled data-last-state="inactive">
+              <span class="icon-wrap"></span>
+              <span class="badge-label text-[9px]">破棄</span>
            </button>
          </div>
        </div>
      </div>
     
-     <!-- ⌨️ 【下段：入力エリア】 -->
+     <!-- ⌨️ 【下段：入力エリア】最初は relative にて目的地パネルのみを画面全域に表示 -->
      <div id="input-container" class="relative w-full z-10">
 
        <!-- STEP 1 -->
@@ -235,7 +244,6 @@
             </h2>
             <button onclick="startRouteSearch()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600 px-3 py-1.5 rounded-lg text-xs font-bold active:scale-95 transition-all">再検索</button>
          </div>
-         <!-- 横スワイプ(スライド)可能な横一列配置に変更 -->
          <div id="route-candidates" class="flex flex-row gap-3 mt-2 min-h-[120px] overflow-x-auto snap-x snap-mandatory no-scrollbar pb-3"></div>
          <button id="btn-next-route" class="ok-btn mt-6 w-full flex items-center justify-center py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-extrabold text-xl shadow-lg active:scale-95 transition-transform" disabled>決定</button>
        </div>
