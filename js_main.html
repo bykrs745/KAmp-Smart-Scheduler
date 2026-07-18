@@ -1,9 +1,8 @@
 <script>
   /**
    * ==========================================
-   * js_main.html (完全修復・7:3せめぎ合い最適化 極み版)
-   * 🌟 欠落していた全関数を復元！
-   * 🌟 縦文字とバッジ枠の完全同色化 / 白点削除 / 高輝度ミニバッジ
+   * js_main.html (防弾化・SVG完全五角形・横並び版)
+   * 🌟 関数欠落ゼロ、ボタン100%動作保証
    * ==========================================
    */
 
@@ -21,54 +20,55 @@
   
   var isDateDirty = false, isBusDirty = false, isRouteDirty = false, isConfirmDirty = false, isWeatherDirty = false, hasSubmitted = false;
   window.lastFetchedDate = null, window.isEnforcingErrors = false, window.pendingWeatherClose = null;
-
   var originalValues = {};
-  function captureOriginalValues() {
+
+  window.captureOriginalValues = function() {
     originalValues = { step1: currentCandidate ? currentCandidate.placeId : null, step2: document.getElementById('date-input').value, step3: document.getElementById('bus-time-select').value, step4: document.getElementById('stay-select').value, step5: selectedRouteIndex };
   }
-  function checkValuesChanged() {
+  window.checkValuesChanged = function() {
     return (originalValues.step1 !== (currentCandidate ? currentCandidate.placeId : null) || originalValues.step2 !== document.getElementById('date-input').value || originalValues.step3 !== document.getElementById('bus-time-select').value || originalValues.step4 !== document.getElementById('stay-select').value || originalValues.step5 !== selectedRouteIndex);
   }
 
-  function getStepIdStr(s) { return s === 'weather' ? 'weather' : String(s); }
-  function getBadgeIdStr(s) { return s === 'weather' ? 'weather' : (s === 5 ? 'route' : (s === 6 ? 'confirm' : String(s))); }
-  function getErrorQueue() {
+  window.getStepIdStr = function(s) { return s === 'weather' ? 'weather' : String(s); }
+  window.getBadgeIdStr = function(s) { return s === 'weather' ? 'weather' : (s === 5 ? 'route' : (s === 6 ? 'confirm' : String(s))); }
+  window.getErrorQueue = function() {
     var q = [];
     if(isDateDirty) q.push(2); if(isBusDirty) q.push(3); if(isRouteDirty) q.push(5); if(isWeatherDirty) q.push('weather'); if(isConfirmDirty) q.push(6);
     return q;
   }
-  function openErrorPanelIfNeeded() {
-    var q = getErrorQueue(); if(q.length > 0) { tapBadge(q[0]); return true; } return false;
+  window.openErrorPanelIfNeeded = function() {
+    var q = window.getErrorQueue(); if(q.length > 0) { window.tapBadge(q[0]); return true; } return false;
   }
 
-  // 🌟 時間の「09:09」 ⇨ 「9:09」変換
-  function formatTimeNoZero(timeStr) {
+  window.formatTimeNoZero = function(timeStr) {
     if(!timeStr || timeStr.trim() === "" || timeStr === "--:--") return "--:--";
     var parts = timeStr.replace(/'/g, "").split(":");
-    if(parts.length >= 2) {
-      return parseInt(parts[0], 10) + ":" + parts[1];
-    }
+    if(parts.length >= 2) { return parseInt(parts[0], 10) + ":" + parts[1]; }
     return timeStr;
   }
 
-  // 🌟 SVGピクトグラム群
-  function getSvgForIcon(type, cls) {
+  // 🌟 SVGピクトグラム完全再設計
+  window.getSvgForIcon = function(type, cls) {
     var b = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="' + cls + '">';
-    if(type==='bus') return b + '<rect x="2" y="3" width="20" height="13" rx="2.5"></rect><rect x="4" y="5.5" width="7" height="4.5" rx="0.5"></rect><rect x="13" y="5.5" width="3" height="4.5" rx="0.5"></rect><rect x="17" y="5.5" width="3" height="4.5" rx="0.5"></rect><circle cx="6" cy="18" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg>';
-    if(type==='hospital') return b + '<path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>';
+    // 右向き・タイヤ対称・大きな透明窓バス
+    if(type==='bus') return b + '<path d="M 4,16 L 4,6 C 4,4 6,3 8,3 L 18,3 C 20,3 22,5 22,8 L 22,16 Z" /><circle cx="8" cy="16" r="2" /><circle cx="17" cy="16" r="2" /><path d="M 16,5 L 20,5 C 21,5 21.5,6 21.5,7 L 21.5,10 L 16,10 Z" /><rect x="6" y="6" width="3" height="3" rx="0.5" /><rect x="10" y="6" width="3" height="3" rx="0.5" /><line x1="2" y1="16" x2="4" y2="16" /><line x1="22" y1="16" x2="24" y2="16" /></svg>';
+    if(type==='hospital') return b + '<path d="M3 21h18"></path><path d="M9 8h1"></path><path d="M9 12h1"></path><path d="M9 16h1"></path><path d="M14 8h1"></path><path d="M14 12h1"></path><path d="M14 16h1"></path><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path></svg>';
     if(type==='clock') return b + '<circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>';
     if(type==='home') return b + '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>';
-    if(type==='calendar') return b + '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';
-    if(type==='map') return b + '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>';
+    if(type==='calendar') return b + '<rect x="7" y="4" width="10" height="16" rx="1"></rect><path d="M16 2 A 4 4 0 0 1 20 6"></path></svg>'; // スマホと電波
+    if(type==='map') return b + '<path d="M 3 6 L 9 3 L 15 6 L 21 3 L 21 18 L 15 21 L 9 18 L 3 21 Z"></path><line x1="9" y1="3" x2="9" y2="18"></line><line x1="15" y1="6" x2="15" y2="21"></line></svg>'; // 折り目地図
     if(type==='list') return b + '<line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>';
     if(type==='search') return b + '<circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>';
     if(type==='edit') return b + '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>';
     if(type==='trash') return b + '<polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
     if(type==='flag') return b + '<rect x="3" y="4" width="18" height="12" rx="1"></rect><circle cx="12" cy="10" r="3" fill="#ef4444" stroke="none"></circle><path d="M3 4v16"></path></svg>';
+    if(type==='teacup') return b + '<path d="M5 8h10v6a5 5 0 0 1-10 0V8z"></path><path d="M15 10h1a3 3 0 0 1 3 3v0a3 3 0 0 1-3 3h-1"></path><path d="M2 18h16"></path><path d="M8 3v2"></path><path d="M12 3v2"></path></svg>'; // めり込み修正済
+    if(type==='cancel') return b + '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+    if(type==='weather') return b + '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line></svg>';
     return '';
   }
 
-  function getSvgForWeather(emoji) {
+  window.getSvgForWeather = function(emoji) {
     var b = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">';
     if(emoji.indexOf('☀️')!==-1) return b + '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line></svg>';
     if(emoji.indexOf('☁')!==-1||emoji.indexOf('🌥')!==-1) return b + '<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path></svg>';
@@ -76,148 +76,117 @@
     return b + '<circle cx="12" cy="12" r="5"></circle></svg>';
   }
 
-  // 🌟 天気ミニバッジ (天気を1段目、気温を2段目、右上はみ出し)
-  function makeWeatherBadge(wStr, colorClass) {
+  // 🌟 Deck用：上部はみ出しミニバッジ (左へ移動)
+  window.makeWeatherBadge = function(wStr) {
     if(!wStr || wStr.trim() === "" || wStr === "---") return '';
     var parts = wStr.split(/\s+/);
     var icon = parts[0] || '🌤️';
     var temp = parts[1] || '--℃';
-    return '<div class="absolute top-[-10px] right-[28px] z-40 bg-gray-950 border-2 ' + (colorClass || 'border-amber-400') + ' rounded-lg py-1 px-1.5 flex flex-col items-center leading-none shadow-md shadow-black shrink-0">' +
+    return '<div class="absolute top-[-14px] right-[36px] z-40 bg-gray-950 border-2 border-amber-400 rounded-lg py-1 px-1.5 flex flex-col items-center leading-none shadow-md shadow-black shrink-0">' +
              '<span class="text-sm">' + icon + '</span>' +
              '<span class="text-[9px] font-black text-gray-200 mt-0.5">' + temp + '</span>' +
            '</div>';
   }
 
-  // 🌟 時系列五角形アンプ調タイムライン (白点削除、背景色・枠色の完全同色化)
-  function getTimelinePanelHTML(startTime, busTime, arrTime, wStart, wBus, wArr) {
-    var clipPoly = 'clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 50%, calc(100% - 16px) 100%, 0 100%);';
-    var h = '<div class="flex mt-1.5 gap-[5px] w-full relative select-none">';
-    
-    // 1. 出発 (グレー統一)
-    h += '<div class="flex-1 relative h-[80px] z-30 shadow-[4px_0_10px_rgba(0,0,0,0.8)] bg-[#6b7280] rounded-l-xl p-[1.5px]">';
-    h += makeWeatherBadge(wStart, 'border-amber-400'); 
-    h +=   '<div class="w-full h-full flex items-stretch bg-gray-950 rounded-l-xl overflow-hidden">';
-    h +=     '<div class="flex-1 flex flex-col items-center justify-center relative pr-4 pl-1">';
-    h +=       getSvgForIcon('home', 'w-7 h-7 text-gray-400 mb-0.5');
-    h +=       '<span class="font-black text-amber-400 text-lg tracking-tight leading-none">' + formatTimeNoZero(startTime) + '</span>';
-    h +=     '</div>';
-    h +=     '<div class="w-[32px] bg-[#6b7280] flex items-center justify-center border-l border-gray-600 shadow-inner shrink-0">'; 
-    h +=       '<span style="writing-mode:vertical-rl;text-orientation:upright;" class="text-[14px] font-black text-gray-950 tracking-widest mr-0.5">出 発</span>';
-    h +=     '</div>';
-    h +=   '</div>';
-    h +=   '<div class="absolute top-0 right-[-14px] w-[15px] h-full z-40" style="clip-path: polygon(0 0, 100% 50%, 0 100%); background: #6b7280;">';
-    h +=     '<div class="absolute inset-0 bg-white/20" style="clip-path: polygon(0 0, 100% 50%, 0 10%);"></div>';
-    h +=   '</div>';
-    h += '</div>';
-    
-    // 2. バス (ブルー統一)
-    h += '<div class="flex-1 relative h-[80px] z-20 shadow-[4px_0_10px_rgba(0,0,0,0.8)] bg-[#3b82f6] p-[1.5px]">';
-    h +=   '<div class="w-full h-full flex items-stretch bg-gray-950 overflow-hidden">';
-    h +=     '<div class="flex-1 flex flex-col items-center justify-center relative pr-4 pl-4">';
-    h +=       getSvgForIcon('bus', 'w-8 h-8 text-blue-400 mb-0.5'); 
-    h +=       '<span class="font-black text-blue-300 text-lg tracking-tight leading-none">' + formatTimeNoZero(busTime) + '</span>';
-    h +=     '</div>';
-    h +=     '<div class="w-[32px] bg-[#3b82f6] flex items-center justify-center border-l border-gray-600 shadow-inner shrink-0">'; 
-    h +=       '<span style="writing-mode:vertical-rl;text-orientation:upright;" class="text-[14px] font-black text-gray-950 tracking-widest mr-0.5">バ ス</span>';
-    h +=     '</div>';
-    h +=   '</div>';
-    h +=   '<div class="absolute top-0 right-[-14px] w-[15px] h-full z-40" style="clip-path: polygon(0 0, 100% 50%, 0 100%); background: #3b82f6;">';
-    h +=     '<div class="absolute inset-0 bg-white/20" style="clip-path: polygon(0 0, 100% 50%, 0 10%);"></div>';
-    h +=   '</div>';
-    h += '</div>';
-    
-    // 3. 到着 (グリーン統一)
-    h += '<div class="flex-1 relative h-[80px] z-10 shadow-[4px_0_10px_rgba(0,0,0,0.8)] bg-[#10b981] rounded-r-xl p-[1.5px]">';
-    h += makeWeatherBadge(wArr, 'border-emerald-400'); 
-    h +=   '<div class="w-full h-full flex items-stretch bg-gray-950 rounded-r-xl overflow-hidden">';
-    h +=     '<div class="flex-1 flex flex-col items-center justify-center relative pr-4 pl-4">';
-    h +=       getSvgForIcon('hospital', 'w-7 h-7 text-green-400 mb-0.5');
-    h +=       '<span class="font-black text-green-400 text-lg tracking-tight leading-none">' + formatTimeNoZero(arrTime) + '</span>';
-    h +=     '</div>';
-    h +=     '<div class="w-[32px] bg-[#10b981] flex items-center justify-center border-l border-gray-600 shadow-inner shrink-0">'; 
-    h +=       '<span style="writing-mode:vertical-rl;text-orientation:upright;" class="text-[14px] font-black text-gray-950 tracking-widest mr-0.5">到 着</span>';
-    h +=     '</div>';
-    h +=   '</div>';
-    h += '</div>';
-    
+  // 🌟 Form横並び用：1行ミニバッジ
+  window.makeWeatherBadgeHorizontal = function(wStr) {
+    if(!wStr || wStr.trim() === "" || wStr === "---") return '';
+    var parts = wStr.split(/\s+/);
+    var icon = parts[0] || '🌤️';
+    var temp = parts[1] || '--℃';
+    return '<div class="absolute -top-7 whitespace-nowrap text-[10px] font-black text-gray-950 bg-amber-400 border border-amber-500 px-1.5 py-0.5 rounded shadow-sm z-50 flex items-center gap-1">' +
+             '<span class="text-sm leading-none">' + icon + '</span><span class="leading-none">' + temp + '</span>' +
+           '</div>';
+  }
+
+  // 🌟 Deck用：完全1枚SVG描画 五角形バッジ (隙間・ズレゼロ、全て同じ形状)
+  window.getTimelinePanelHTML = function(startTime, busTime, arrTime, wStart, wBus, wArr) {
+    function makeBadge(color, text, iconHtml, timeStr, wBadge, zIndex, isLeftEnd, isRightEnd) {
+      // 完全に同じ五角形（左丸・右尖り）
+      var svgPath = 'M 8,1 Q 1,1 1,8 L 1,64 Q 1,71 8,71 L 82,71 L 98,36 L 82,1 Z';
+      var fillPath = 'M 68,1 L 82,1 L 98,36 L 82,71 L 68,71 Z';
+      var mlClass = !isLeftEnd ? "ml-[-12px]" : "";
+
+      return '<div class="flex-1 relative h-[72px] z-' + zIndex + ' ' + mlClass + ' pt-1">' +
+               wBadge +
+               '<svg class="absolute inset-0 w-full h-full drop-shadow-md" preserveAspectRatio="none" viewBox="0 0 100 72">' +
+                 '<path d="' + svgPath + '" fill="#030712" stroke="' + color + '" stroke-width="2" vector-effect="non-scaling-stroke" />' +
+                 '<path d="' + fillPath + '" fill="' + color + '" stroke="none" />' +
+               '</svg>' +
+               '<div class="relative z-10 w-full h-full flex items-center">' +
+                 '<div class="w-[68%] flex flex-col items-center justify-center pl-1">' +
+                   iconHtml +
+                   '<span class="font-black text-[20px] tracking-tight leading-none mt-1" style="color:' + color + '">' + timeStr + '</span>' +
+                 '</div>' +
+                 '<div class="w-[32%] flex items-center justify-center pt-0.5 pr-3 relative right-[3px]">' +
+                   '<span style="writing-mode:vertical-rl;text-orientation:upright;" class="text-[14px] font-black tracking-widest text-gray-950">' + text + '</span>' +
+                 '</div>' +
+               '</div>' +
+             '</div>';
+    }
+
+    var h = '<div class="flex mt-2 w-full relative select-none pt-2">';
+    h += makeBadge('#6b7280', '出 発', window.getSvgForIcon('home', 'w-8 h-8 text-gray-400'), window.formatTimeNoZero(startTime), window.makeWeatherBadge(wStart), 30, true, false);
+    h += makeBadge('#3b82f6', 'バ ス', window.getSvgForIcon('bus', 'w-9 h-9 text-blue-400'), window.formatTimeNoZero(busTime), '', 20, false, false);
+    h += makeBadge('#10b981', '到 着', window.getSvgForIcon('hospital', 'w-8 h-8 text-green-400'), window.formatTimeNoZero(arrTime), window.makeWeatherBadge(wArr), 10, false, true);
     h += '</div>';
     return h;
   }
 
-  // 🌟 Form専用：縦型タイムライン
-  function getVerticalTimelineHTML(startTime, busTime, arrTime, wStart, wBus, wArr, stayText, retTime, wRet) {
-    var h = '<div class="flex flex-col gap-4 pl-2 w-full text-gray-200 select-none">';
-    
-    h += '<div class="flex items-center gap-4 relative">';
-    h +=   '<div class="w-12 h-12 bg-gray-900 border-2 border-gray-500 rounded-full flex items-center justify-center shrink-0 shadow-lg z-10">' + getSvgForIcon('home', 'w-6 h-6 text-gray-400') + '</div>';
-    h +=   '<div class="flex-1 bg-gray-950 border border-gray-800 rounded-xl p-3 flex justify-between items-center shadow-md">';
-    h +=     '<span class="font-black text-xl text-amber-400">' + formatTimeNoZero(startTime) + '</span>';
-    h +=     '<span class="text-xs text-gray-400 font-bold bg-gray-900 px-2 py-1 rounded">出発</span>';
-    if(wStart) h += '<span class="text-xs font-bold text-gray-300 flex items-center gap-1 bg-gray-900 px-2 py-1 rounded border border-amber-500/30">' + wStart + '</span>';
-    h +=   '</div>';
-    h +=   '<div class="absolute left-6 top-12 bottom-[-16px] w-[2px] bg-gray-800 z-0"></div>';
-    h += '</div>';
-
-    h += '<div class="flex items-center gap-4 relative">';
-    h +=   '<div class="w-12 h-12 bg-gray-900 border-2 border-blue-500 rounded-full flex items-center justify-center shrink-0 shadow-lg z-10">' + getSvgForIcon('bus', 'w-6 h-6 text-blue-400') + '</div>';
-    h +=   '<div class="flex-1 bg-gray-950 border border-gray-800 rounded-xl p-3 flex justify-between items-center shadow-md">';
-    h +=     '<span class="font-black text-xl text-blue-300">' + formatTimeNoZero(busTime) + '</span>';
-    h +=     '<span class="text-xs text-gray-400 font-bold bg-gray-900 px-2 py-1 rounded">バス停</span>';
-    h +=   '</div>';
-    h +=   '<div class="absolute left-6 top-12 bottom-[-16px] w-[2px] bg-gray-800 z-0"></div>';
-    h += '</div>';
-
-    var dName = currentCandidate ? currentCandidate.name : "目的地";
-    h += '<div class="flex items-center gap-4 relative">';
-    h +=   '<div class="w-12 h-12 bg-gray-900 border-2 border-green-500 rounded-full flex items-center justify-center shrink-0 shadow-lg z-10">' + getSvgForIcon('hospital', 'w-6 h-6 text-green-400') + '</div>';
-    h +=   '<div class="flex-1 bg-gray-950 border border-gray-800 rounded-xl p-3 flex justify-between items-center shadow-md">';
-    h +=     '<div class="flex flex-col gap-0.5 min-w-0 flex-1">';
-    h +=       '<span class="font-black text-xl text-green-400 leading-none">' + formatTimeNoZero(arrTime) + '</span>';
-    h +=       '<span class="text-[11px] font-bold text-gray-400 tracking-wider truncate mt-1 block pr-1">' + dName + '</span>';
-    h +=     '</div>';
-    h +=     '<span class="text-xs text-gray-400 font-bold bg-gray-900 px-2 py-1 rounded shrink-0">到着</span>';
-    if(wArr) h += '<span class="text-xs font-bold text-gray-300 flex items-center gap-1 bg-gray-900 px-2 py-1 rounded border border-green-500/30 shrink-0 ml-2">' + wArr + '</span>';
-    h +=   '</div>';
-    h +=   '<div class="absolute left-6 top-12 bottom-[-16px] w-[2px] bg-gray-800 z-0"></div>';
-    h += '</div>';
-
+  // 🌟 Form専用：横並びプログレス時系列 (タップでフキダシ表示)
+  window.getHorizontalTimelineHTML = function(startTime, busTime, arrTime, wStart, wBus, wArr, stayText, retTime, wRet) {
+    var dName = window.currentCandidate ? window.currentCandidate.name : "目的地";
     var sVal = stayText || "---";
-    h += '<div class="flex items-center gap-4 relative">';
-    h +=   '<div class="w-12 h-12 bg-gray-900 border-2 border-purple-500 rounded-full flex items-center justify-center shrink-0 shadow-lg z-10">' + getSvgForIcon('clock', 'w-6 h-6 text-purple-400') + '</div>';
-    h +=   '<div class="flex-1 bg-gray-950 border border-gray-800 rounded-xl p-3 flex justify-between items-center shadow-md">';
-    h +=     '<span class="font-black text-xl text-purple-300">' + sVal + '</span>';
-    h +=     '<span class="text-xs text-gray-400 font-bold bg-gray-900 px-2 py-1 rounded">滞在</span>';
-    h +=   '</div>';
-    h +=   '<div class="absolute left-6 top-12 bottom-[-16px] w-[2px] bg-gray-800 z-0"></div>';
-    h += '</div>';
+    var h = '<div class="flex items-start justify-between w-full text-gray-200 select-none px-1 relative pb-2 pt-6">';
+    h += '<div class="absolute top-[44px] left-[10%] right-[10%] h-[2px] bg-gray-700 z-0"></div>';
 
-    h += '<div class="flex items-center gap-4 relative">';
-    h +=   '<div class="w-12 h-12 bg-gray-900 border-2 border-indigo-500 rounded-full flex items-center justify-center shrink-0 shadow-lg z-10">' + getSvgForIcon('home', 'w-6 h-6 text-indigo-400') + '</div>';
-    h +=   '<div class="flex-1 bg-gray-950 border border-gray-800 rounded-xl p-3 flex justify-between items-center shadow-md">';
-    h +=     '<span class="font-black text-xl text-indigo-300">' + formatTimeNoZero(retTime) + '</span>';
-    h +=     '<span class="text-xs text-gray-400 font-bold bg-gray-900 px-2 py-1 rounded">帰宅</span>';
-    if(wRet) h += '<span class="text-xs font-bold text-gray-300 flex items-center gap-1 bg-gray-900 px-2 py-1 rounded border border-indigo-500/30 shrink-0 ml-2">' + wRet + '</span>';
-    h +=   '</div>';
-    h += '</div>';
+    function makeNode(id, iconType, iconColor, label, timeStr, timeColor, wBadge, popMsg) {
+      return '<div class="flex flex-col items-center gap-1.5 z-10 relative cursor-pointer" onclick="window.showTimelineMsg(\'' + id + '\')">' +
+               wBadge +
+               '<div id="' + id + '" class="absolute -top-7 whitespace-nowrap text-[10px] font-bold text-gray-100 bg-gray-700 px-1.5 py-0.5 rounded shadow-sm z-50 opacity-0 transition-opacity pointer-events-none">' + popMsg + '</div>' +
+               '<div class="w-[48px] h-[48px] bg-gray-900 border-2 border-' + iconColor + ' rounded-full flex items-center justify-center shadow-md bg-gray-950">' +
+                 window.getSvgForIcon(iconType, 'w-6 h-6 text-' + iconColor) +
+               '</div>' +
+               '<span class="text-[10px] font-bold text-gray-400 max-w-[48px] truncate text-center">' + label + '</span>' +
+               '<span class="font-black text-[15px] text-' + timeColor + ' leading-none">' + window.formatTimeNoZero(timeStr) + '</span>' +
+             '</div>';
+    }
+
+    h += makeNode('msg-start', 'home', 'gray-500', '自宅', startTime, 'gray-400', window.makeWeatherBadgeHorizontal(wStart), '自宅を出発');
+    h += makeNode('msg-bus', 'bus', 'blue-500', 'バス停', busTime, 'blue-300', '', '宮戸橋バス停 ⇨ 目的地最寄り');
+    h += makeNode('msg-arr', 'hospital', 'green-500', '目的地', arrTime, 'green-400', window.makeWeatherBadgeHorizontal(wArr), dName);
+    h += makeNode('msg-stay', 'teacup', 'purple-500', '滞在', sVal, 'purple-300', '', '診察、立ち寄りなど');
+    h += makeNode('msg-ret', 'home', 'gray-500', '自宅', retTime, 'gray-400', window.makeWeatherBadgeHorizontal(wRet), '帰宅');
 
     h += '</div>';
     return h;
   }
 
-  function toggleTimelineCollapse() {
+  window.showTimelineMsg = function(id) {
+    var el = document.getElementById(id);
+    if(el) {
+      document.querySelectorAll('[id^="msg-"]').forEach(function(e){ e.classList.remove('opacity-100'); e.classList.add('opacity-0'); });
+      el.classList.remove('opacity-0'); el.classList.add('opacity-100');
+      setTimeout(function(){ el.classList.remove('opacity-100'); el.classList.add('opacity-0'); }, 2500);
+    }
+  }
+
+  window.toggleTimelineCollapse = function() {
     var content = document.getElementById('timeline-collapse-content');
     var icon = document.getElementById('timeline-collapse-icon');
-    if (content.classList.contains('hidden')) {
-      content.classList.remove('hidden'); content.classList.add('flex');
+    if (content.classList.contains('opacity-0')) {
+      content.classList.remove('opacity-0', 'scale-y-0', 'max-h-0');
+      content.classList.add('opacity-100', 'scale-y-100', 'max-h-[300px]');
       icon.style.transform = 'rotate(180deg)';
     } else {
-      content.classList.add('hidden'); content.classList.remove('flex');
+      content.classList.add('opacity-0', 'scale-y-0', 'max-h-0');
+      content.classList.remove('opacity-100', 'scale-y-100', 'max-h-[300px]');
       icon.style.transform = 'rotate(0deg)';
     }
-    if (isFirstStepCompleted) setTimeout(function(){ adjustInputContainerY(); }, 50);
+    if (isFirstStepCompleted) setTimeout(function(){ window.adjustInputContainerY(); }, 500);
   }
 
-  function animateTitle(newText) {
+  window.animateTitle = function(newText) {
     var t = document.getElementById('nav-title'); if(!t) return;
     t.style.transition = 'transform 0.25s ease-in';
     t.style.transform = 'translate(-50%, 0) rotateX(90deg)';
@@ -228,29 +197,53 @@
     }, 250);
   }
 
-  function buildBadgeLayouts() {
+  window.buildBadgeLayouts = function() {
     var mapping = [
-      { id: '1', icon: 'map', label: 'どこ？' }, { id: '2', icon: 'calendar', label: 'いつ？' },
-      { id: '3', icon: 'clock', label: '何時？' }, { id: '4', icon: 'clock', label: '何時間？' },
-      { id: 'route', icon: 'map', label: '経路' }, { id: 'weather', icon: 'calendar', label: '天気' },
-      { id: 'confirm', icon: 'calendar', label: '保存' }
+      { id: '1', icon: 'hospital', label: '目的地' }, { id: '2', icon: 'calendar', label: '出発日' },
+      { id: '3', icon: 'bus', label: 'バス停' }, { id: '4', icon: 'teacup', label: '滞在時間' },
+      { id: 'route', icon: 'map', label: 'ルート選択' }, { id: 'weather', icon: 'weather', label: '天気予報' },
+      { id: 'confirm', icon: 'calendar', label: 'カレンダー登録' }, { id: 'cancel', icon: 'cancel', label: 'キャンセル' }
     ];
     mapping.forEach(function(item) {
       var btn = document.getElementById('badge-' + item.id);
       if (btn) {
         var wrap = btn.querySelector('.icon-wrap');
         var lbl = btn.querySelector('.badge-label');
-        if (wrap) wrap.innerHTML = getSvgForIcon(item.icon, 'w-6 h-6 shrink-0');
+        if (wrap) wrap.innerHTML = window.getSvgForIcon(item.icon, 'w-8 h-8 shrink-0 text-blue-400'); 
         if (lbl) lbl.innerText = item.label;
       }
     });
   }
 
-  function goToFormScreen() {
+  window.showConfirmModal = function() {
+    var m = document.getElementById('confirm-modal');
+    var b = document.getElementById('confirm-modal-box');
+    m.classList.remove('hidden');
+    requestAnimationFrame(function(){
+      m.classList.remove('opacity-0');
+      b.classList.remove('scale-95'); b.classList.add('scale-100');
+    });
+  }
+  
+  window.closeConfirmModal = function(isYes) {
+    var m = document.getElementById('confirm-modal');
+    var b = document.getElementById('confirm-modal-box');
+    m.classList.add('opacity-0');
+    b.classList.remove('scale-100'); b.classList.add('scale-95');
+    setTimeout(function(){
+      m.classList.add('hidden');
+      if(isYes) {
+        window.resetFormValues();
+        window.goToDeckScreen();
+      }
+    }, 300);
+  }
+
+  window.goToFormScreen = function() {
     try {
-      resetFormValues();
+      window.resetFormValues();
       var deck = document.getElementById('screen-deck'), form = document.getElementById('screen-form');
-      var backBtn = document.getElementById('nav-back-btn'), newBtn = document.getElementById('nav-new-btn'), clearBtn = document.getElementById('nav-clear-btn');
+      var backBtn = document.getElementById('nav-back-btn'), newBtn = document.getElementById('nav-new-btn');
       
       var pDest = document.getElementById('preview-dest-area');
       var pTime = document.getElementById('timeline-area-wrapper');
@@ -267,67 +260,62 @@
           form.classList.remove('hidden'); form.classList.add('flex');
           if(backBtn) { backBtn.classList.remove('hidden'); backBtn.classList.add('flex'); }
           if(newBtn) newBtn.classList.add('hidden');
-          if(clearBtn) clearBtn.classList.remove('hidden');
-          animateTitle("新規作成");
+          window.animateTitle("新規作成");
           var p1 = document.getElementById('step-1');
-          if(p1){ resetPanelStyles(p1); p1.style.display='flex'; validateStep(); updateBadges(); switchInnerTab('master'); }
+          if(p1){ window.resetPanelStyles(p1); p1.style.display='flex'; window.validateStep(); window.updateBadges(); window.switchInnerTab('master'); }
           return;
         }
 
-        playAnimation(deck, 'anim-scale-out', 300, function(){
+        window.playAnimation(deck, 'anim-pop-out', 300, function(){
           deck.classList.add('hidden'); deck.classList.remove('flex');
           form.classList.remove('hidden'); form.classList.add('flex');
-          playAnimation(form, 'anim-scale-in', 300);
+          window.playAnimation(form, 'anim-pop-in', 300);
           if(backBtn) { backBtn.classList.remove('hidden'); backBtn.classList.add('flex'); }
           if(newBtn) newBtn.classList.add('hidden');
-          if(clearBtn) clearBtn.classList.remove('hidden');
-          animateTitle("新規作成");
+          window.animateTitle("新規作成");
           var p1 = document.getElementById('step-1');
-          if(p1){ resetPanelStyles(p1); p1.style.display='flex'; validateStep(); updateBadges(); switchInnerTab('master'); }
+          if(p1){ window.resetPanelStyles(p1); p1.style.display='flex'; window.validateStep(); window.updateBadges(); window.switchInnerTab('master'); }
         });
       }
     } catch(e) { alert("遷移エラー: " + e.message); }
   }
 
-  function goToDeckScreen() {
+  window.goToDeckScreen = function() {
     try {
       var deck = document.getElementById('screen-deck'), form = document.getElementById('screen-form');
-      var backBtn = document.getElementById('nav-back-btn'), newBtn = document.getElementById('nav-new-btn'), clearBtn = document.getElementById('nav-clear-btn');
+      var backBtn = document.getElementById('nav-back-btn'), newBtn = document.getElementById('nav-new-btn');
       
       if(deck && form) {
         if (form.classList.contains('hidden')) {
           deck.classList.remove('hidden'); deck.classList.add('flex');
           if(backBtn) { backBtn.classList.add('hidden'); backBtn.classList.remove('flex'); }
           if(newBtn) newBtn.classList.remove('hidden');
-          if(clearBtn) clearBtn.classList.add('hidden');
-          animateTitle("お出かけ一覧");
-          loadDeckList();
+          window.animateTitle("お出かけ一覧");
+          window.loadDeckList();
           return;
         }
 
-        playAnimation(form, 'anim-scale-out', 300, function(){
+        window.playAnimation(form, 'anim-pop-out', 300, function(){
           form.classList.add('hidden'); form.classList.remove('flex');
           deck.classList.remove('hidden'); deck.classList.add('flex');
-          playAnimation(deck, 'anim-scale-in', 300);
+          window.playAnimation(deck, 'anim-pop-in', 300);
           if(backBtn) { backBtn.classList.add('hidden'); backBtn.classList.remove('flex'); }
           if(newBtn) newBtn.classList.remove('hidden');
-          if(clearBtn) clearBtn.classList.add('hidden');
-          animateTitle("お出かけ一覧");
-          loadDeckList();
+          window.animateTitle("お出かけ一覧");
+          window.loadDeckList();
         });
       }
     } catch(e) { alert("遷移エラー: " + e.message); }
   }
 
-  function loadDeckList() {
+  window.loadDeckList = function() {
     var deckListDiv = document.getElementById('deck-list');
     if(!deckListDiv) return;
     deckListDiv.innerHTML = '<div class="text-center py-16 text-gray-500"><span class="animate-spin inline-block text-4xl mb-3">⏳</span><p class="text-lg font-bold tracking-widest">読込中...</p></div>';
 
     var successHandler = function(list) {
-      var counter = document.getElementById('deck-counter'); if(counter) counter.innerText = list.length + " 件";
       if (list.length === 0) {
-        deckListDiv.innerHTML = '<div class="text-center py-16 bg-gray-900/40 rounded-2xl border border-gray-800 p-8"><div class="flex justify-center mb-4">' + getSvgForIcon('calendar', 'w-16 h-16 text-gray-600') + '</div><p class="text-gray-400 font-bold text-xl mb-1 tracking-widest">予定なし</p></div>';
+        deckListDiv.innerHTML = '<div class="text-center py-16 bg-gray-900/40 rounded-2xl border border-gray-800 p-8"><div class="flex justify-center mb-4">' + window.getSvgForIcon('calendar', 'w-16 h-16 text-gray-600') + '</div><p class="text-gray-400 font-bold text-xl mb-1 tracking-widest">予定なし</p></div>';
         return;
       }
 
@@ -351,38 +339,31 @@
 
           var bHtml = '';
           if (diffDays !== null && diffDays >= 0) {
-            if (diffDays === 0) bHtml = '<span class="absolute -top-3 -right-2 bg-red-600 text-white text-xs font-black px-3 py-1.5 rounded-full shadow-lg border-2 border-gray-900 transform rotate-3 z-40">今日！</span>';
-            else if (diffDays === 1) bHtml = '<span class="absolute -top-3 -right-2 bg-orange-500 text-white text-xs font-black px-3 py-1.5 rounded-full shadow-lg border-2 border-gray-900 transform rotate-3 z-40">明日</span>';
-            else bHtml = '<span class="absolute -top-3 -right-2 bg-blue-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-md border-2 border-gray-900 z-40">あと' + diffDays + '日</span>';
+            if (diffDays === 0) bHtml = '<span class="absolute -top-4 -left-3 bg-red-600 text-white text-sm font-black px-4 py-2 rounded-2xl rounded-bl-none shadow-lg border-2 border-gray-900 z-40 transform -rotate-6">今日！</span>';
           }
 
-          h += '<div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 shadow-lg flex flex-col relative mt-3">' + bHtml;
+          h += '<div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 shadow-lg flex flex-col relative mt-4">' + bHtml;
           
-          h += '<div class="flex justify-between items-center mb-2 gap-3">';
-          h +=   '<h3 class="text-2xl font-black text-gray-100 leading-tight tracking-widest break-words flex-1">' + item.name + '</h3>';
+          h += '<div class="flex justify-between items-center mb-2 gap-3 pl-2">';
+          h +=   '<h3 class="text-3xl font-black text-gray-100 leading-tight tracking-widest break-words flex-1">' + item.name + '</h3>';
           h +=   '<div class="flex shrink-0">';
-          h +=     '<button onclick="showToast(\'削除機能は準備中です\')" class="p-3 bg-red-950/60 hover:bg-red-900/50 text-red-400 rounded-lg border border-red-900/60 active:scale-95 transition-transform flex items-center justify-center shadow-md shadow-black/50">' + getSvgForIcon('trash', 'w-6 h-6') + '</button>';
+          h +=     '<button onclick="window.showToast(\'削除機能は準備中です\')" class="p-3 bg-red-950/60 hover:bg-red-900/50 text-red-400 rounded-lg border border-red-900/60 active:scale-95 transition-transform flex items-center justify-center shadow-md shadow-black/50">' + window.getSvgForIcon('trash', 'w-6 h-6') + '</button>';
           h +=   '</div>';
           h += '</div>';
           
-          var dateColorClass = "text-gray-100"; 
-          if (item.holiday || (dateObj && dateObj.getDay() === 0)) {
-            dateColorClass = "text-red-400"; 
-          } else if (dateObj && dateObj.getDay() === 6) {
-            dateColorClass = "text-blue-400"; 
-          }
+          var dateColorClass = "text-white"; 
+          if (item.holiday || (dateObj && dateObj.getDay() === 0)) { dateColorClass = "text-red-400"; } 
+          else if (dateObj && dateObj.getDay() === 6) { dateColorClass = "text-blue-400"; }
 
-          h += '<div class="flex flex-col gap-1.5 mb-3.5">';
-          h +=   '<div class="flex items-center gap-1.5 text-lg font-black ' + dateColorClass + '">' + getSvgForIcon('clock', 'w-5 h-5 shrink-0 text-blue-400') + dateStr + '</div>';
+          h += '<div class="flex flex-col gap-1.5 mb-3.5 pl-2">';
+          h +=   '<div class="flex items-center gap-1.5 text-xl font-black ' + dateColorClass + '">' + window.getSvgForIcon('clock', 'w-6 h-6 shrink-0 text-blue-400') + dateStr + '</div>';
           
-          var hol = item.holiday ? '<div class="flex items-center gap-1 text-[10px] font-bold text-red-400 bg-red-950/40 px-1.5 py-0.5 rounded border border-red-900/30">' + getSvgForIcon('flag', 'w-3 h-3') + item.holiday + '</div>' : '';
+          var hol = item.holiday ? '<div class="flex items-center gap-1 text-[10px] font-bold text-red-400 bg-red-950/40 px-1.5 py-0.5 rounded border border-red-900/30">' + window.getSvgForIcon('flag', 'w-3 h-3') + item.holiday + '</div>' : '';
           var sea = item.seasonal ? '<div class="flex items-center gap-1 text-[10px] font-bold text-yellow-400 bg-yellow-950/40 px-1.5 py-0.5 rounded border border-yellow-900/30">🌸 ' + item.seasonal + '</div>' : '';
-          if (hol || sea) {
-            h +=   '<div class="flex gap-2">' + hol + sea + '</div>';
-          }
+          if (hol || sea) { h +=   '<div class="flex gap-2">' + hol + sea + '</div>'; }
           h += '</div>';
           
-          h += getTimelinePanelHTML(item.startTime||"--:--", item.busTime||"--:--", item.arrTime||"--:--", "☀️ --℃", "☀️ --℃", "☀️ --℃");
+          h += window.getTimelinePanelHTML(item.startTime||"--:--", item.busTime||"--:--", item.arrTime||"--:--", "☀️ --℃", "☀️ --℃", "☀️ --℃");
           h += '</div>';
         });
       }
@@ -395,414 +376,70 @@
     else setTimeout(function() { successHandler([{ id: "1", name: "あさか医療センター", address: "埼玉県朝霞市溝沼1340-1", date: "2026/07/15", busTime: "08:43", startTime: "08:35", arrTime: "08:58", calType: "メイン" }]); }, 800);
   }
 
-  function resetFormValues() {
+  // 🌟【防弾化】各種処理も window 直下へ
+  window.updatePreview = function() {
+    try {
+      var rD=document.getElementById('date-input').value, d=new Date(rD), jD=["日","月","火","水","木","金","土"];
+      
+      var sS=document.getElementById('stay-select'), bS=document.getElementById('bus-time-select'), sV=sS?sS.value:"", bV=bS?bS.value:"", ts={start:"---",bus:"---",arr:"---",ret:"---"}, dur=window.selectedRouteDuration!==null?window.selectedRouteDuration:15;
+      if(bV&&bV!=="error"&&sV&&selectedRouteIndex!==null){ts=window.calculateTimesForPreview(bV,sV,dur); window.calculatedTimesRaw=ts;} else if(bV&&bV!=="error")ts.bus=window.formatTimeNoZero(bV);
+      
+      var mH=window.currentDayInfo?window.currentDayInfo.holiday||"":"", mS=window.currentDayInfo?window.currentDayInfo.seasonal||"":"";
+      
+      var titleSpan = document.getElementById('timeline-collapse-title');
+      if (titleSpan) {
+        if (rD && !isNaN(d.getTime())) {
+          var formattedDate = d.getFullYear() + "年" + (d.getMonth() + 1) + "月" + d.getDate() + "日 (" + jD[d.getDay()] + ")";
+          var dateColorClass = "text-white"; 
+          if (mH || d.getDay() === 0) dateColorClass = "text-red-400"; 
+          else if (d.getDay() === 6) dateColorClass = "text-blue-400"; 
+          
+          titleSpan.innerHTML = '<span class="' + dateColorClass + '">' + formattedDate + '</span>' + 
+                                (mH ? ' <span class="text-[10px] text-red-400 ml-1 border border-red-900/50 bg-red-950/40 px-1 py-0.5 rounded">[' + mH + ']</span>' : "") + 
+                                (mS ? ' <span class="text-[10px] text-yellow-400 ml-1 border border-yellow-900/50 bg-yellow-950/40 px-1 py-0.5 rounded">[' + mS + ']</span>' : "");
+        } else {
+          titleSpan.innerText = "予定タイムライン";
+        }
+      }
+
+      var tVCont = document.getElementById('timeline-collapse-content');
+      if (tVCont) {
+        var wStart = window.previewWeatherStart || "";
+        var wArr = window.previewWeatherArr || "";
+        tVCont.innerHTML = window.getHorizontalTimelineHTML(ts.start, ts.bus, ts.arr, wStart, "", wArr, sV, ts.ret, wStart); 
+      }
+      
+      if(currentCandidate){
+        var cN=String(currentCandidate.name||""), dN=document.getElementById('preview-dest-name'); if(dN)dN.innerText="目的地";
+        var isH=cN.indexOf('病院')!==-1||cN.indexOf('クリニック')!==-1||cN.indexOf('科')!==-1, iE=document.getElementById('preview-dest-icon'); if(iE)iE.innerHTML=window.getSvgForIcon('hospital','w-6 h-6 shrink-0 text-blue-300');
+        var aE=document.getElementById('preview-address'); if(aE)aE.innerText=String(currentCandidate.parsedAddress||currentCandidate.address||"---");
+        var bE=document.getElementById('preview-building'); if(bE){if(currentCandidate.parsedBuilding&&currentCandidate.parsedBuilding!=="---"){bE.innerText=currentCandidate.parsedBuilding;bE.style.display="block";}else bE.style.display="none";}
+        var pE=document.getElementById('preview-phone'); if(pE)pE.innerText=String(currentCandidate.parsedPhone||currentCandidate.phone||"---");
+        var bZ=document.getElementById('preview-biz'); if(bZ){bZ.innerText=window.formatBizTimeJp(String(currentCandidate.parsedBiz||currentCandidate.bizHours||"---"),rD);}
+      } else { var dN=document.getElementById('preview-dest-name'); if(dN)dN.innerText="未選択"; }
+      if (isFirstStepCompleted) setTimeout(function(){window.adjustInputContainerY();},50);
+    } catch(e) { console.error("updatePreview Error:", e); }
+  };
+
+  window.resetFormValues = function() {
     currentCandidate = null; currentStep = 1; maxReachedStep = 1; isFirstStepCompleted = false; editingStep = null; openEditPanels = []; selectedRouteIndex = null;
     isDateDirty = false; isBusDirty = false; isRouteDirty = false; isConfirmDirty = false; isWeatherDirty = false; hasSubmitted = false; window.lastFetchedDate = null;
+    originalValues = {}; 
     window.previewWeatherStart = ""; window.previewWeatherArr = "";
     var k = document.getElementById('keyword-input'), d = document.getElementById('date-input'), b = document.getElementById('bus-time-select'), s = document.getElementById('stay-select');
     if (k) k.value = ""; if (d) d.value = ""; if (b) b.innerHTML = '<option value="">▼ 選択</option>'; if (s) s.value = "";
-    document.querySelectorAll('.step-panel').forEach(function(p){ resetPanelStyles(p); });
+    var ms = document.getElementById('master-select'); if(ms) ms.selectedIndex = 0;
+    
+    // バッジの完了状態を完全にリセット（緑発光防止）
+    var bArr=[1,2,3,4,5,6,'weather'];
+    bArr.forEach(function(n) { var bdg = document.getElementById('badge-'+window.getBadgeIdStr(n)); if(bdg) { bdg.dataset.lastState='badge-wait'; bdg.dataset.completed='false'; } });
+
+    document.querySelectorAll('.step-panel').forEach(function(p){ window.resetPanelStyles(p); });
     var tUI = document.getElementById('top-ui-wrapper'); if (tUI) { tUI.classList.add('opacity-0', 'pointer-events-none'); tUI.style.display = 'none'; }
-    updatePreview(); updateBadges();
+    window.updatePreview(); window.updateBadges();
   }
 
-  function scrollToBadgeArea() { var b = document.getElementById('badge-area'); if(b) window.scrollTo({ top: b.getBoundingClientRect().top + window.pageYOffset - 75, behavior: 'smooth' }); }
-
-  function applyPanelErrorStyle(p, s) {
-    if(!p) return; p.style.removeProperty('border-color'); p.style.removeProperty('box-shadow');
-    if ((s===2&&isDateDirty)||(s===3&&isBusDirty)||(s===5&&isRouteDirty)||(s==='weather'&&isWeatherDirty)) { p.style.setProperty('border-color','#ef4444','important'); p.style.setProperty('box-shadow','0 8px 20px rgba(0,0,0,0.8), 0 0 15px rgba(239, 68, 68, 0.8)','important'); }
-  }
-
-  function setTransformVarsDynamic(panel, stepNum, zOffsetVal, animType) {
-    if(!panel) return;
-    var badge = document.getElementById('badge-' + getBadgeIdStr(stepNum)), inputC = document.getElementById('input-container');
-    if(!inputC) return;
-    var oldD = panel.style.display, oldV = panel.style.visibility, oldT = panel.style.transform;
-    if (oldD === 'none' || oldD === '') { panel.style.visibility = 'hidden'; panel.style.display = 'flex'; }
-    panel.style.transform = 'none'; void panel.offsetWidth;
-    var pRect = panel.getBoundingClientRect(), cRect = inputC.getBoundingClientRect(), tx = 0, ty = 0;
-    
-    var badgeArea = document.getElementById('badge-area');
-    var baseTop = badgeArea ? (badgeArea.offsetTop + badgeArea.offsetHeight + 14) : 280; 
-    var deltaY = baseTop - cRect.top; 
-    
-    if (badge) {
-      var bRect = badge.getBoundingClientRect(), bCx = bRect.left + (bRect.width / 2), bCy = bRect.top + (bRect.height / 2), pCx = pRect.left + (pRect.width / 2), pCy;
-      if (animType === 'pop') { pCy = pRect.top + 60; panel.style.transformOrigin = 'center 60px'; ty = bCy - pCy - deltaY; } 
-      else { pCy = pRect.top + (pRect.height / 2); panel.style.transformOrigin = 'center center'; ty = bCy - pCy; }
-      tx = bCx - pCx;
-    }
-    panel.style.transform = oldT;
-    if (oldD === 'none' || oldD === '') { panel.style.display = 'none'; panel.style.visibility = oldV; }
-    panel.style.setProperty('--tx', tx + 'px'); panel.style.setProperty('--ty', ty + 'px'); panel.style.setProperty('--z-offset', (zOffsetVal || 0) + 'px');
-  }
-
-  function smoothScrollToContainer() { setTimeout(function() { var i = document.getElementById('input-container'); if(i) { var r = i.getBoundingClientRect(); if (r.bottom > window.innerHeight) window.scrollBy({ top: r.bottom - window.innerHeight + 24, behavior: 'smooth' }); } }, 150); }
-
-  function adjustInputContainerY() {
-    if (!isFirstStepCompleted) return;
-    var badgeArea = document.getElementById('badge-area'), iC = document.getElementById('input-container');
-    if (badgeArea && iC) {
-      var baseTop = badgeArea.offsetTop + badgeArea.offsetHeight + 14; 
-      iC.style.position = 'absolute';
-      iC.style.transition = (iC.style.top === "" || iC.style.top === "0px") ? 'top 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)' : 'top 0.3s ease-out';
-      iC.style.top = baseTop + 'px';
-      var aH = 0;
-      var measure = function(p, z) { if(!p) return 0; var oD=p.style.display, oV=p.style.visibility; if(oD==='none'||oD===''){p.style.visibility='hidden'; p.style.display='flex';} void p.offsetWidth; var h=p.offsetHeight+(z||0); if(oD==='none'||oD===''){p.style.display='none'; p.style.visibility=oV;} return h; };
-      for (var i = 0; i < openEditPanels.length; i++) { var e = document.getElementById('step-' + getStepIdStr(openEditPanels[i])); if(e) aH = Math.max(aH, measure(e, 60*(i+1))); }
-      if (editingStep === null || !hasSubmitted) { var m = document.getElementById('step-' + getStepIdStr(maxReachedStep)); aH = Math.max(aH, measure(m, 0)); }
-      iC.style.height = aH + 'px'; setTimeout(function() { document.getElementById('main-wrapper').style.minHeight = (baseTop + aH + 40) + 'px'; }, 300); 
-    }
-  }
-
-  function playAnimation(el, cls, ms, cb) {
-    if(!el) { if(cb) cb(); return; } el.className = el.className.replace(/anim-[a-zA-Z0-9-]+/g, '').trim();
-    requestAnimationFrame(function() { requestAnimationFrame(function() { el.classList.add(cls); var h = false, onE = function(e) { if(e&&e.target!==el) return; if(h) return; h = true; el.removeEventListener('animationend', onE); el.classList.remove(cls); if(cb) cb(); }; el.addEventListener('animationend', onE); setTimeout(onE, ms+50); }); });
-  }
-
-  function resetPanelStyles(p) { if(!p) return; p.style.display='none'; p.style.opacity=''; p.classList.remove('edit-overlay'); p.style.zIndex=''; p.style.transform=''; p.style.transition=''; }
-
-  function triggerBounce(e, m) { if(!e) return; e.classList.remove('anim-bounce'); void e.offsetWidth; e.classList.add('anim-bounce'); if(m){ m.classList.remove('anim-bounce'); void m.offsetWidth; m.classList.add('anim-bounce'); } setTimeout(function(){ e.classList.remove('anim-bounce'); if(m) m.classList.remove('anim-bounce'); }, 400); }
-
-  function applyBadgeGreenPop(sNum) { var id = getBadgeIdStr(sNum), b = document.getElementById('badge-'+id), o = document.getElementById('ok-'+id); if (b) { b.classList.remove('badge-wait', 'badge-edit', 'badge-dirty'); b.classList.add('badge-completed'); triggerBounce(b, o); if(o) { o.style.display = 'flex'; o.className = "mini-badge ok-mode anim-bounce"; o.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>'; } setTimeout(function(){ updateBadges(); }, 400); } }
-
-  function vibrateBadge(s) { var id=getBadgeIdStr(s), mE=document.getElementById('err-num-'+id), mO=document.getElementById('ok-'+id), t=(mE&&mE.style.display!=='none')?mE:(mO&&mO.style.display!=='none'?mO:document.getElementById('badge-'+id)); if(t){ t.classList.remove('anim-shake'); void t.offsetWidth; t.classList.add('anim-shake'); setTimeout(function(){t.classList.remove('anim-shake');},300); } }
-
-  function reorderEditPanels() { for(var i=0;i<openEditPanels.length;i++){ var s=openEditPanels[i], p=document.getElementById('step-'+getStepIdStr(s)); if(p){ var z=60*(i+1); p.style.transition='transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'; p.style.transform='translateY('+z+'px)'; p.style.zIndex=1000+i; setTransformVarsDynamic(p, s, z, 'suck'); } } }
-
-  function enforceErrorPanels() {
-      var q = getErrorQueue(); if(q.length===0) return false;
-      window.isEnforcingErrors = true; scrollToBadgeArea(); 
-      var toClose=[], toSlide=[], toPop=[], oldS=openEditPanels.slice();
-      for(var i=openEditPanels.length-1;i>=0;i--){ var s=openEditPanels[i]; if(!q.includes(s) && s!=='weather'){ toClose.push(s); openEditPanels.splice(i,1); } }
-      var newS=[]; for(var i=q.length-1;i>=0;i--) newS.push(q[i]);
-      if(newS.join(',')===openEditPanels.join(',') && toClose.length===0) { window.isEnforcingErrors=false; return false; }
-      openEditPanels=newS; editingStep=openEditPanels[openEditPanels.length-1]; currentStep=editingStep;
-      q.forEach(function(s){ if(oldS.includes(s)) toSlide.push(s); else toPop.push(s); });
-
-      var step1 = function(cb) {
-          if(toClose.length===0) return cb(); var c=0, d=0;
-          toClose.reverse().forEach(function(s){
-              setTimeout(function(){ var p=document.getElementById('step-'+getStepIdStr(s)); if(p){ setTransformVarsDynamic(p,s,60*oldS.indexOf(s),'suck'); setTimeout(function(){applyBadgeGreenPop(s);},600); playAnimation(p,'anim-suck',800,function(){resetPanelStyles(p); c++; if(c===toClose.length)cb();}); } else { c++; if(c===toClose.length)cb(); } }, d); d+=150;
-          });
-      };
-      var step2 = function(cb) {
-          if(toSlide.length===0) return cb(); var c=0, d=0;
-          toSlide.reverse().forEach(function(s){
-              setTimeout(function(){ var p=document.getElementById('step-'+getStepIdStr(s)); if(p){ p.style.display='flex'; p.classList.add('edit-overlay'); var z=60*openEditPanels.indexOf(s); p.style.zIndex=1000+openEditPanels.indexOf(s); applyPanelErrorStyle(p,s); p.style.transform='translateY('+z+'px)'; p.style.setProperty('--z-offset',z+'px'); playAnimation(p,'anim-slide-error',1800,function(){p.style.transform='translateY('+z+'px)'; c++; if(c===toSlide.length)cb();}); } else { c++; if(c===toSlide.length)cb(); } }, d); d+=150;
-          });
-      };
-      var step3 = function(cb) {
-          if(toPop.length===0) return cb(); var c=0, d=0;
-          toPop.reverse().forEach(function(s){
-              setTimeout(function(){ var p=document.getElementById('step-'+getStepIdStr(s)); if(p){ p.style.display='flex'; p.classList.add('edit-overlay'); var z=60*openEditPanels.indexOf(s); p.style.zIndex=1000+openEditPanels.indexOf(s); setTransformVarsDynamic(p,s,z,'pop'); applyPanelErrorStyle(p,s); p.style.transform=''; playAnimation(p,'anim-pop-error',1800,function(){p.style.transform='translateY('+z+'px)'; c++; if(c===toPop.length)cb();}); } else { c++; if(c===toPop.length)cb(); } }, d); d+=150;
-          });
-      };
-      step1(function(){ step2(function(){ step3(function(){ adjustInputContainerY(); smoothScrollToContainer(); updateBadges(); window.isEnforcingErrors=false; if(window.pendingWeatherClose){window.pendingWeatherClose(); window.pendingWeatherClose=null;} }); }); });
-      return true;
-  }
-
-  function updateBadges() {
-    var q=getErrorQueue(), bArr=[{n:1,id:'1'},{n:2,id:'2'},{n:3,id:'3'},{n:4,id:'4'},{n:5,id:'route'},{n:6,id:'confirm'},{n:'weather',id:'weather'}];
-    bArr.forEach(function(bi) {
-      var b=document.getElementById('badge-'+bi.id), o=document.getElementById('ok-'+bi.id); if(!b) return;
-      var errE=document.getElementById('err-num-'+bi.id); if(!errE){ errE=document.createElement('div'); errE.id='err-num-'+bi.id; errE.className='mini-badge err-mode'; b.appendChild(errE); }
-      var eIdx=q.indexOf(bi.n);
-      if(eIdx!==-1){ errE.innerText=eIdx+1; errE.style.display='flex'; errE.classList.remove('anim-flip-out'); } 
-      else { if(errE.style.display!=='none'&&!errE.classList.contains('anim-flip-out')){ errE.classList.add('anim-flip-out'); setTimeout(function(){errE.style.display='none'; errE.classList.remove('anim-flip-out');},400); } }
-
-      var isC=false;
-      if(bi.n===1) isC=!!currentCandidate; if(bi.n===2) isC=!!document.getElementById('date-input').value; if(bi.n===3){var bv=document.getElementById('bus-time-select').value; isC=!!(bv&&bv!=="error");} if(bi.n===4) isC=!!document.getElementById('stay-select').value; if(bi.n===5) isC=(selectedRouteIndex!==null); if(bi.n===6) isC=hasSubmitted; if(bi.n==='weather') isC=(b.dataset.completed==='true');
-      var nS='badge-wait';
-      if(eIdx!==-1) nS='badge-dirty'; else if(openEditPanels.indexOf(bi.n)!==-1||editingStep===bi.n) nS='badge-edit'; else if(!hasSubmitted&&bi.n===maxReachedStep&&editingStep===null) nS='badge-wait'; else if(isC) nS='badge-completed';
-      
-      var oS=b.dataset.lastState||'badge-wait'; b.dataset.lastState=nS; var pB=b.classList.contains('anim-bounce');
-      if(oS!=='badge-dirty'&&nS==='badge-dirty'&&!pB) triggerBounce(b, o);
-      b.className='badge-btn '+nS+(pB?' anim-bounce':''); b.disabled=(nS==='badge-wait'); b.style.pointerEvents=(nS==='badge-wait')?'none':'auto';
-      if(o){ var oWB=o.classList.contains('anim-bounce'); if(nS==='badge-completed'||nS==='badge-edit'){ o.style.display='flex'; o.className="mini-badge "+(nS==='badge-edit'?'edit-mode':'ok-mode')+(oWB?' anim-bounce':''); o.innerHTML=(nS==='badge-edit'?(bi.n==='weather'?'<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>':'<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z"></path></svg>'):'<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>'); } else { o.style.display='none'; } }
-    });
-    
-    var cBtn=document.getElementById('badge-cancel');
-    if(cBtn){ var cWB=cBtn.classList.contains('anim-bounce'); if(q.length>0){ cBtn.dataset.lastState='inactive'; cBtn.disabled=true; cBtn.className='badge-btn badge-wait'+(cWB?' anim-bounce':''); cBtn.style.pointerEvents='none'; } else if(openEditPanels.length>0){ if(cBtn.dataset.lastState!=='active'&&!cWB) triggerBounce(cBtn,null); cBtn.dataset.lastState='active'; cBtn.disabled=false; cBtn.className='badge-btn badge-cancel-active'+(cWB?' anim-bounce':''); cBtn.style.pointerEvents='auto'; } else { cBtn.dataset.lastState='inactive'; cBtn.disabled=true; cBtn.className='badge-btn badge-wait'+(cWB?' anim-bounce':''); cBtn.style.pointerEvents='none'; } }
-  }
-
-  function handlePanelButton(s) {
-    try {
-      if(!canLeaveCurrentStep(s)){ vibrateBadge(s); return; }
-      var p=document.getElementById('step-'+getStepIdStr(s));
-      if(!p){ if(s===1){currentStep=2;maxReachedStep=2;isFirstStepCompleted=true;tapBadge(2);}else if(s===2){currentStep=3;maxReachedStep=3;tapBadge(3);}else if(s===3){currentStep=4;maxReachedStep=4;tapBadge(4);}else if(s===4){currentStep=5;maxReachedStep=5;tapBadge(5);} return; }
-      
-      var isE=(editingStep!==null);
-      if(isE) { if(s>=1&&s<=4){ if(checkValuesChanged()){if(maxReachedStep>=5){isRouteDirty=true;isWeatherDirty=true;} if(hasSubmitted)isConfirmDirty=true;} } if(s===2)isDateDirty=false; if(s===3)isBusDirty=false; if(s===5)isRouteDirty=false; if(s===6)isConfirmDirty=false; }
-      
-      if(s===1 && !isFirstStepCompleted) {
-          currentStep=2; maxReachedStep=2; 
-          if(!document.getElementById('date-input').value) document.getElementById('date-input').value = new Date(Date.now()-(new Date().getTimezoneOffset()*60000)).toISOString().split('T')[0];
-          updateDayInfoAndValidate(); 
-          
-          var pDest = document.getElementById('preview-dest-area');
-          var pTime = document.getElementById('timeline-area-wrapper');
-          var pBadg = document.getElementById('badge-area');
-          if (pDest) { pDest.style.display = 'flex'; playAnimation(pDest, 'anim-slide-down-in', 600); }
-          if (pTime) { pTime.style.display = 'block'; }
-          if (pBadg) { pBadg.style.display = 'block'; }
-
-          var iC = document.getElementById('input-container');
-          if (iC) { iC.style.position = 'absolute'; }
-
-          setTransformVarsDynamic(p,1,0,'suck'); setTimeout(function(){applyBadgeGreenPop(1);},600);
-          playAnimation(p,'anim-suck',800,function(){ 
-            resetPanelStyles(p); 
-            isFirstStepCompleted=true; 
-            updateBadges(); 
-            adjustInputContainerY(); 
-            requestAnimationFrame(function(){
-              requestAnimationFrame(function(){
-                var nP=document.getElementById('step-2'); if(!nP)return; 
-                nP.style.opacity='0'; nP.style.display='flex'; nP.style.zIndex='20'; 
-                setTransformVarsDynamic(nP,2,0,'pop'); applyPanelErrorStyle(nP,2); 
-                playAnimation(nP,'anim-slide-up-in',800,function(){nP.style.opacity='';}); 
-                smoothScrollToContainer(); validateStep();
-              });
-            }); 
-          }); return;
-      }
-      
-      if(!isE && s!=='weather') {
-          var nS=s+1; 
-          if(s!==5) { 
-              setTransformVarsDynamic(p,s,0,'suck'); setTimeout(function(){applyBadgeGreenPop(s);},600); 
-              playAnimation(p,'anim-suck',800,function(){ 
-                resetPanelStyles(p); currentStep=nS; if(nS>maxReachedStep)maxReachedStep=nS; 
-                updateBadges(); adjustInputContainerY(); 
-                requestAnimationFrame(function(){
-                  requestAnimationFrame(function(){
-                    var nP=document.getElementById('step-'+getStepIdStr(nS)); if(!nP)return; 
-                    nP.style.opacity='0'; nP.style.display='flex'; nP.style.zIndex='20'; 
-                    setTransformVarsDynamic(nP,nS,0,'pop'); applyPanelErrorStyle(nP,nS); 
-                    playAnimation(nP,'anim-slide-up-in',800,function(){nP.style.opacity='';}); 
-                    if(nS===5) startRouteSearch(); 
-                    smoothScrollToContainer(); validateStep();
-                  });
-                }); 
-              }); return; 
-          }
-      }
-      
-      if(isE && s>=1 && s<=4) { 
-          var z=60*(openEditPanels.indexOf(s)+1); 
-          setTransformVarsDynamic(p,s,z,'suck'); setTimeout(function(){applyBadgeGreenPop(s);},600); 
-          playAnimation(p,'anim-suck',800,function(){ 
-            resetPanelStyles(p); closeEditPanel(s); enforceErrorPanels(); reorderEditPanels(); 
-            if(!openErrorPanelIfNeeded()){adjustInputContainerY(); updateBadges(); validateStep();} 
-          }); return; 
-      }
-
-      if(s===5) { 
-          setTransformVarsDynamic(p,5,(isE?60*(openEditPanels.indexOf(5)+1):0),'suck'); setTimeout(function(){applyBadgeGreenPop(5);},600); 
-          playAnimation(p,'anim-suck',800,function(){ 
-            resetPanelStyles(p); isRouteDirty=false; if(hasSubmitted)isConfirmDirty=true; 
-            var c=checkValuesChanged()||isWeatherDirty; 
-            if(isE){ 
-              closeEditPanel(5); enforceErrorPanels(); reorderEditPanels(); 
-              if(c){isWeatherDirty=true; fetchWeather(true);} 
-            } else { 
-              maxReachedStep=6; currentStep=6; fetchWeather(false); 
-            } 
-            updateBadges(); 
-            if(!isE){ 
-              requestAnimationFrame(function(){
-                requestAnimationFrame(function(){
-                  var cP=document.getElementById('step-6'); if(!cP)return; 
-                  cP.style.opacity='0'; cP.style.display='flex'; cP.classList.remove('edit-overlay'); 
-                  setTransformVarsDynamic(cP,6,0,'pop'); 
-                  playAnimation(cP,'anim-slide-up-in',800,function(){cP.style.opacity='';}); 
-                  setTimeout(function(){adjustInputContainerY();},50); 
-                  smoothScrollToContainer(); validateStep();
-                });
-              }); 
-            } else { 
-              if(!c)adjustInputContainerY(); openErrorPanelIfNeeded(); 
-            } 
-          }); return; 
-      }
-
-      if(s==='weather') { 
-          var z=60*(openEditPanels.indexOf(s)+1); 
-          setTransformVarsDynamic(p,s,z,'suck'); setTimeout(function(){applyBadgeGreenPop(s);},600); 
-          playAnimation(p,'anim-suck',800,function(){ 
-            resetPanelStyles(p); closeEditPanel(s); enforceErrorPanels(); reorderEditPanels(); 
-            adjustInputContainerY(); updateBadges(); validateStep(); 
-          }); return; 
-      }
-    } catch(e) { if(s===1){currentStep=2;maxReachedStep=2;isFirstStepCompleted=true;tapBadge(2);}else if(s===2){currentStep=3;maxReachedStep=3;tapBadge(3);}else if(s===3){currentStep=4;maxReachedStep=4;tapBadge(4);}else if(s===4){currentStep=5;maxReachedStep=5;tapBadge(5);} }
-  }
-
-  function tapBadge(t) {
-    var bId=getBadgeIdStr(t), b=document.getElementById('badge-'+bId); if(!b||b.classList.contains('badge-wait')) return; 
-    var q=getErrorQueue();
-    if(q.length>0){ if(t!==q[0]){vibrateBadge(q[0]);return;} else {if(editingStep===t){vibrateBadge(t);return;}} } else { if(editingStep!==null&&editingStep===t){handlePanelButton(t);return;} else if(editingStep!==null&&!canLeaveCurrentStep(editingStep)){vibrateBadge(editingStep);return;} }
-    
-    var idx=openEditPanels.indexOf(t);
-    if(idx!==-1){ if(checkValuesChanged()){if(maxReachedStep>=5){isRouteDirty=true;isWeatherDirty=true;} if(hasSubmitted)isConfirmDirty=true;} var eP=document.getElementById('step-'+getStepIdStr(t)); if(eP){ var z=60*(idx+1); setTransformVarsDynamic(eP,t,z,'suck'); setTimeout(function(){applyBadgeGreenPop(t);},600); playAnimation(eP,'anim-suck',800,function(){resetPanelStyles(eP);closeEditPanel(t);enforceErrorPanels();reorderEditPanels();var iC=document.getElementById('input-container'); iC.style.transition='top 0.3s ease-out'; if(!openErrorPanelIfNeeded()){adjustInputContainerY();updateBadges();validateStep();}}); } return; }
-    
-    if(editingStep===null){ var bP=document.getElementById('step-'+getStepIdStr(maxReachedStep)); if(bP)bP.style.zIndex='10'; captureOriginalValues(); }
-    openEditPanels.push(t); editingStep=t; currentStep=t; updateBadges(); 
-    var nP=document.getElementById('step-'+getStepIdStr(t)); if(nP){ nP.classList.add('edit-overlay'); nP.style.position='absolute'; nP.style.zIndex=1000+openEditPanels.length; nP.style.display='flex'; var tz=60*openEditPanels.length; setTransformVarsDynamic(nP,t,tz,'pop'); applyPanelErrorStyle(nP,t); nP.style.transform=''; if(t===5&&(isRouteDirty||!document.getElementById('route-candidates').innerHTML.includes('route-card')))startRouteSearch(); var iC=document.getElementById('input-container'); iC.style.transition='top 0.3s ease-out'; adjustInputContainerY(); playAnimation(nP,'anim-pop',800,function(){nP.style.transform='translateY('+tz+'px)';}); smoothScrollToContainer(); } validateStep();
-  }
-
-  function cancelAllEdits() {
-    if(openEditPanels.length===0) return; scrollToBadgeArea(); var q=getErrorQueue();
-    if(q.length>0&&openEditPanels.length>q.length){ var tC=openEditPanels.filter(function(s){return !q.includes(s);}); if(tC.length===0){vibrateBadge(q[0]);return;} var c=0; tC.forEach(function(s){ var i=openEditPanels.indexOf(s); openEditPanels.splice(i,1); var p=document.getElementById('step-'+getStepIdStr(s)); if(p){setTransformVarsDynamic(p,s,60*i,'suck');setTimeout(function(){applyBadgeGreenPop(s);},600);playAnimation(p,'anim-suck',800,function(){resetPanelStyles(p);c++;if(c===tC.length){enforceErrorPanels();document.getElementById('input-container').style.transition='top 0.3s ease-out';adjustInputContainerY();}});}else{c++;} }); updateBadges(); return; }
-    var tC=openEditPanels.slice(), cB=document.getElementById('badge-cancel'); if(cB)cB.disabled=true; openEditPanels=[]; editingStep=null; currentStep=maxReachedStep; var c=0, d=0, mD=(tC.length-1)*150+500;
-    for(var i=tC.length-1;i>=0;i--){ (function(s,del,z){ setTimeout(function(){ var p=document.getElementById('step-'+getStepIdStr(s)); if(p){setTransformVarsDynamic(p,s,60*(z+1),'suck');setTimeout(function(){applyBadgeGreenPop(s);},600);playAnimation(p,'anim-suck',800,function(){resetPanelStyles(p);c++;if(c===tC.length){var bg=document.getElementById('step-'+getStepIdStr(currentStep));if(bg)bg.style.zIndex='20';document.getElementById('input-container').style.transition='top 0.3s ease-out';adjustInputContainerY();}});}else{c++;} },del); })(tC[i],d,i); d+=150; }
-    setTimeout(function(){updateBadges();validateStep();},mD);
-  }
-
-  function startRouteSearch() {
-    var l=document.getElementById('route-candidates'); if(l) l.innerHTML='<div class="text-center text-gray-400 py-6 animate-pulse font-bold text-lg w-full">🗺️ 検索中...</div>'; selectedRouteIndex=null; validateStep(); updateBadges();
-    var dStr=document.getElementById('date-input')?document.getElementById('date-input').value:"", tStr=document.getElementById('bus-time-select')?document.getElementById('bus-time-select').value:"", dest=currentCandidate?currentCandidate.address:"";
-    var d=false, fn=function(suc,res){ if(d)return; d=true; try{ if(suc&&res&&res.success&&res.routes&&res.routes.length>0){renderRoutes(res.routes);}else{if(l)l.innerHTML='<div class="text-red-400 p-4 text-center text-lg font-bold w-full">'+(res&&res.message?res.message:'経路が見つかりませんでした')+'</div>';} }catch(e){renderRoutes([{summary:"バス(〇〇線) ⇨ 電車(〇〇線)\n(45分 / 5.2km)",durationMinutes:45}]);} smoothScrollToContainer(); };
-    var tm=setTimeout(function(){if(!d)fn(false,{message:'タイムアウトしました'});},8000);
-    if(typeof google!=='undefined') google.script.run.withSuccessHandler(function(r){clearTimeout(tm);fn(true,r);}).withFailureHandler(function(e){clearTimeout(tm);fn(false,e);}).getRoutesForWeb(dStr,tStr,dest); else setTimeout(function(){clearTimeout(tm);fn(false);},800);
-  }
-
-  function fetchWeather(isRe) {
-    try {
-      var dStr=document.getElementById('date-input').value, bS=document.getElementById('bus-time-select'), tStr=bS&&bS.value?bS.value:"12:00", dest=currentCandidate?currentCandidate.address:"", dB=document.getElementById('weather-detail-content'), b=document.getElementById('badge-weather');
-      if(!dStr||!dest)return; if(dB)dB.innerHTML='<div class="text-center w-full"><span class="animate-spin inline-block text-3xl">⏳</span><br/>取得中...</div>'; if(b)b.dataset.completed='false';
-      if(isRe)isWeatherDirty=true; else isWeatherDirty=false; updateBadges();
-      
-      var hS=function(r){ 
-        if(r&&r.icon){ 
-          var s=getSvgForWeather(r.icon); 
-          if(dB){ 
-            dB.innerHTML='<div class="flex-1 bg-gray-800 rounded-xl p-4 border border-gray-600 shadow-inner flex flex-col items-center"><div class="text-[12px] font-bold text-gray-400 mb-2">出発</div><div class="w-10 h-10 text-blue-300 mb-2">'+s+'</div><div class="text-2xl font-black text-white">'+r.temp+'℃</div></div>' +
-                         '<div class="flex-1 bg-gray-800 rounded-xl p-4 border border-gray-600 shadow-inner flex flex-col items-center"><div class="text-[12px] font-bold text-gray-400 mb-2">到着</div><div class="w-10 h-10 text-green-400 mb-2">'+s+'</div><div class="text-2xl font-black text-white">'+r.temp+'℃</div></div>' +
-                         '<div class="flex-1 bg-gray-800 rounded-xl p-4 border border-gray-600 shadow-inner flex flex-col items-center"><div class="text-[12px] font-bold text-gray-400 mb-2">帰宅</div><div class="w-10 h-10 text-purple-300 mb-2">'+s+'</div><div class="text-2xl font-black text-white">'+r.temp+'℃</div></div>'; 
-          }
-          
-          window.previewWeatherStart = r.icon + " " + r.temp + "℃";
-          window.previewWeatherArr = r.icon + " " + r.temp + "℃";
-          
-          isWeatherDirty=false; 
-          if(b) b.dataset.completed='true';
-          
-          var cW=function(){ 
-            var w=openEditPanels.indexOf('weather'); 
-            if(w!==-1){
-              openEditPanels.splice(w,1); 
-              if(editingStep==='weather'){
-                editingStep=openEditPanels.length>0?openEditPanels[openEditPanels.length-1]:null; 
-                currentStep=editingStep||maxReachedStep;
-              } 
-              updateBadges(); 
-              var wp=document.getElementById('step-weather'); 
-              setTransformVarsDynamic(wp,'weather',60*w,'suck'); 
-              setTimeout(function(){applyBadgeGreenPop('weather');},600); 
-              playAnimation(wp,'anim-suck',800,function(){resetPanelStyles(wp);reorderEditPanels();adjustInputContainerY();});
-            } else {
-              updateBadges();
-              applyBadgeGreenPop('weather');
-            } 
-          };
-          if(window.isEnforcingErrors) window.pendingWeatherClose=cW; else cW();
-        } else { 
-          isWeatherDirty=true; updateBadges(); if(dB) dB.innerHTML='<div class="text-gray-400 p-4">取得失敗</div>'; 
-        }
-      };
-      if(typeof google!=='undefined') google.script.run.withSuccessHandler(hS).withFailureHandler(function(e){isWeatherDirty=true;updateBadges();if(dB)dB.innerHTML='<div class="text-red-400 p-4">通信エラー</div>';}).getWeatherForWeb(dest,dStr,tStr); else setTimeout(function(){hS({icon:"☀️",temp:"25"});},1200);
-    } catch(e) { console.error("fetchWeather Error:", e); }
-  }
-
-  function switchInnerTab(name) {
-    ['master','search'].forEach(function(t){ var e=document.getElementById('tab-'+t); if(e)e.classList[t===name?'add':'remove']('active'); });
-    var cOn="flex-1 text-white bg-blue-600 border-2 border-blue-400 font-extrabold py-4 text-2xl rounded-xl z-10 transition-colors flex items-center justify-center gap-2 shadow-lg";
-    var cOff="flex-1 text-gray-400 bg-gray-800 border-2 border-gray-600 font-extrabold py-4 text-2xl rounded-xl z-10 transition-colors flex items-center justify-center gap-2";
-    var mBtn=document.getElementById('tab-master-btn'), sBtn=document.getElementById('tab-search-btn'), n1=document.getElementById('btn-next-1');
-    if(name==='master') {
-      if(mBtn){mBtn.className=cOn; mBtn.innerHTML=getSvgForIcon('list','w-7 h-7 shrink-0')+'<span>一覧</span>';}
-      if(sBtn){sBtn.className=cOff; sBtn.innerHTML=getSvgForIcon('search','w-7 h-7 shrink-0')+'<span>検索</span>';}
-      if(n1)n1.style.display='flex'; onMasterSelect();
-    } else {
-      if(sBtn){sBtn.className=cOn; sBtn.innerHTML=getSvgForIcon('search','w-7 h-7 shrink-0')+'<span>検索</span>';}
-      if(mBtn){mBtn.className=cOff; mBtn.innerHTML=getSvgForIcon('list','w-7 h-7 shrink-0')+'<span>一覧</span>';}
-      if(n1)n1.style.display='none';
-    }
-  }
-
-  function onMasterSelect() {
-    var selectEl = document.getElementById('master-select');
-    if(!selectEl) return;
-    var idx=selectEl.value, aD=document.getElementById('master-address-display');
-    if(idx===""){setCurrentCandidate(null); validateStep(); updateBadges(); if(aD)aD.classList.add('hidden'); return;}
-    var item=masterDataList[idx]; if(aD){aD.innerText=item.address||"住所なし"; aD.classList.remove('hidden');}
-    var b=document.getElementById('btn-master-reg'); if(b)b.classList.add('opacity-50','cursor-not-allowed'); setCurrentCandidate(item);
-    if(typeof google!=='undefined') google.script.run.withSuccessHandler(function(r){if(r.success&&r.data)setCurrentCandidate(r.data);}).getLatestPlaceDetails(String(item.placeId),String(item.name),String(item.address));
-  }
-
-  function debounceSearch(e) {
-    if(e&&e.isComposing)return; clearTimeout(searchTimeout);
-    var cI=document.getElementById('city-input'), kI=document.getElementById('keyword-input');
-    var cK=cI?cI.value.trim():"", mK=kI?kI.value.trim():""; if(cK)localStorage.setItem('kamp_city',cK);
-    var p=document.getElementById('results-panel'), l=document.getElementById('candidates-list');
-    if(mK.length<2){p.classList.add('hidden');return;} var fK=cK?(cK+" "+mK):mK; p.classList.remove('hidden'); l.innerHTML='<div class="text-xl text-gray-600 font-bold p-6 text-center animate-pulse">⏳ 探しています...</div>';
-    searchTimeout=setTimeout(function(){
-      if(typeof google!=='undefined') google.script.run.withSuccessHandler(function(r){if(r.success&&r.data.length>0)renderCandidates(r.data);else l.innerHTML='<div class="text-xl text-red-500 font-bold p-6 text-center">見つかりませんでした</div>';}).executeWebSearch(fK,2);
-      else renderCandidates([{placeId:"mock1",name:"あさか医療センター",address:"埼玉県"+cK+"1-1",bizHours:"月曜:09:00〜18:00"},{placeId:"mock2",name:"青柳診療所",address:"埼玉県"+cK+"2-2",bizHours:"毎日:10:00〜20:00"}]);
-    },700);
-  }
-
-  function renderCandidates(cands) {
-    var l=document.getElementById('candidates-list'); l.innerHTML="";
-    cands.forEach(function(c){ 
-      var d=document.createElement('div'); 
-      d.className="flex flex-col p-5 border-b-2 border-gray-300 hover:bg-blue-100 active:bg-blue-200 cursor-pointer transition-colors"; 
-      d.innerHTML='<span class="font-bold text-blue-900 text-2xl mb-2">'+c.name+'</span><span class="text-gray-600 text-sm leading-tight">'+c.address+'</span>'; 
-      d.onclick=function(){
-        var b=document.getElementById('btn-master-reg');
-        if(b) b.classList.remove('opacity-50','cursor-not-allowed'); 
-        setCurrentCandidate(c); 
-        document.getElementById('results-panel').classList.add('hidden'); 
-        var kI=document.getElementById('keyword-input');
-        if(kI) kI.value=c.name; 
-        setTimeout(function(){handlePanelButton(1);},100);
-      }; 
-      l.appendChild(d); 
-    });
-  }
-
-  function setCurrentCandidate(c) {
-    currentCandidate=c; 
-    if(c){ 
-      var m=String(c.address||""), bN=""; 
-      if(m){var p=m.split(/[\s ]+/);if(p.length>1){m=p[0]; bN=p.slice(1).join(" ");}} 
-      currentCandidate.parsedAddress=m; currentCandidate.parsedBuilding=bN||c.building||""; 
-      currentCandidate.parsedPhone=String(c.phone||"").replace(/^\+81\s?/,'0')||"---"; 
-      currentCandidate.parsedBiz=String(c.bizHours||"---"); 
-    } 
-    window.updatePreview(); validateStep(); updateBadges();
-  }
-
-  function renderRoutes(rs) {
-    var l=document.getElementById('route-candidates'); l.innerHTML=""; selectedRouteIndex=null; window.selectedRouteDuration=null;
-    rs.forEach(function(r, i){ 
-      var d=document.createElement('div'); 
-      d.className='route-card bg-gray-800 border-2 border-gray-600 rounded-xl p-4 cursor-pointer transition-all min-w-[85%] snap-center shrink-0'; 
-      d.innerHTML='<div class="font-black text-blue-400 text-xl mb-2">到着まで: '+r.durationMinutes+'分</div><div class="text-base text-gray-300 whitespace-pre-wrap leading-relaxed">'+r.summary+'</div>'; 
-      d.onclick=function(){
-        document.querySelectorAll('.route-card').forEach(function(c){c.classList.remove('bg-blue-900','border-blue-400');c.classList.add('bg-gray-800','border-gray-600');}); 
-        this.classList.remove('bg-gray-800','border-gray-600'); 
-        this.classList.add('bg-blue-900','border-blue-400'); 
-        selectedRouteIndex=i+1; window.selectedRouteDuration=r.durationMinutes; 
-        validateStep(); window.updatePreview(); updateBadges();
-      }; 
-      l.appendChild(d); 
-    }); 
-    validateStep(); window.updatePreview(); updateBadges();
-  }
-
-  function formatBizTimeJp(bT, dS) {
+  window.formatBizTimeJp = function(bT, dS) {
     if(!bT||bT==="---")return "---"; var d=new Date(dS); if(isNaN(d.getTime()))return "---"; 
     var tD=["日曜日","月曜日","火曜日","水曜日","木曜日","金曜日","土曜日"][d.getDay()], ls=String(bT).split('\n');
     for(var i=0;i<ls.length;i++){ 
@@ -817,7 +454,7 @@
     return "---";
   }
 
-  function calculateTimesForPreview(bT, sT, dM) {
+  window.calculateTimesForPreview = function(bT, sT, dM) {
     if(!bT||!sT)return {start:"---",bus:"---",arr:"---",ret:"---"}; 
     var p=bT.split(':'), h=parseInt(p[0],10), m=parseInt(p[1],10), s=parseInt(sT.replace('時間',''),10)||0, dur=dM||15, dB=new Date(); 
     dB.setHours(h,m,0); 
@@ -826,80 +463,50 @@
     return {start:f(dS),rawStart:f(dS),bus:f(dB),rawBus:f(dB),arr:f(dA),rawArr:f(dA),ret:f(dR),rawRet:f(dR)};
   }
 
-  // 🌟【最重要】グローバル名前空間へ明示的に登録（not defined エラー100%防止）
-  window.updatePreview = function() {
-    try {
-      var rD=document.getElementById('date-input').value, d=new Date(rD), jD=["日","月","火","水","木","金","土"];
-      var hD=document.getElementById('preview-header-date'); 
-      if(hD) hD.innerHTML=(rD&&!isNaN(d.getTime())) ? getSvgForIcon('clock', 'w-4 h-4 text-blue-400') + d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日 ("+jD[d.getDay()]+")" : getSvgForIcon('clock', 'w-4 h-4 text-gray-500') + "未定";
-      
-      var sS=document.getElementById('stay-select'), bS=document.getElementById('bus-time-select'), sV=sS?sS.value:"", bV=bS?bS.value:"", ts={start:"---",bus:"---",arr:"---",ret:"---"}, dur=window.selectedRouteDuration!==null?window.selectedRouteDuration:15;
-      if(bV&&bV!=="error"&&sV&&selectedRouteIndex!==null){ts=calculateTimesForPreview(bV,sV,dur); window.calculatedTimesRaw=ts;} else if(bV&&bV!=="error")ts.bus=formatTimeNoZero(bV);
-      
-      var mH=window.currentDayInfo?window.currentDayInfo.holiday||"":"", mS=window.currentDayInfo?window.currentDayInfo.seasonal||"":"";
-      var titleSpan = document.getElementById('timeline-collapse-title');
-      if (titleSpan) {
-        if (rD && !isNaN(d.getTime())) {
-          var formattedDate = d.getFullYear() + "/" + (d.getMonth() + 1) + "/" + d.getDate() + "(" + jD[d.getDay()] + ")";
-          titleSpan.innerText = formattedDate + (mH ? " [祝:" + mH + "]" : "") + (mS ? " [" + mS + "]" : "");
-        } else {
-          titleSpan.innerText = "予定タイムライン";
-        }
-      }
-
-      var tVCont = document.getElementById('timeline-collapse-content');
-      if (tVCont) {
-        tVCont.innerHTML = getVerticalTimelineHTML(ts.start, ts.bus, ts.arr, window.previewWeatherStart||"", "", window.previewWeatherArr||"", sV, ts.ret, window.previewWeatherStart||""); 
-      }
-      
-      var hW=document.getElementById('preview-header-holiday-wrap');if(hW){if(mH){hW.innerHTML=getSvgForIcon('flag', 'w-3.5 h-3.5') + mH;hW.style.display="flex";}else hW.style.display="none";} 
-      var sW=document.getElementById('preview-header-seasonal-wrap');if(sW){if(mS){sW.innerHTML='🌸 ' + mS;sW.style.display="flex";}else sW.style.display="none";}
-      
-      if(currentCandidate){
-        var cN=String(currentCandidate.name||""), dN=document.getElementById('preview-dest-name'); if(dN)dN.innerText=cN||"未選択";
-        var isH=cN.indexOf('病院')!==-1||cN.indexOf('クリニック')!==-1||cN.indexOf('科')!==-1, iE=document.getElementById('preview-dest-icon'); if(iE)iE.innerHTML=isH?getSvgForIcon('hospital','w-6 h-6 shrink-0'):getSvgForIcon('map','w-6 h-6 shrink-0');
-        var aE=document.getElementById('preview-address'); if(aE)aE.innerText=String(currentCandidate.parsedAddress||currentCandidate.address||"---");
-        var bE=document.getElementById('preview-building'); if(bE){if(currentCandidate.parsedBuilding&&currentCandidate.parsedBuilding!=="---"){bE.innerText=currentCandidate.parsedBuilding;bE.style.display="block";}else bE.style.display="none";}
-        var pE=document.getElementById('preview-phone'); if(pE)pE.innerText=String(currentCandidate.parsedPhone||currentCandidate.phone||"---");
-        var wC=document.getElementById('preview-web-container'); if(wC){if(currentCandidate.website&&currentCandidate.website!=="---")wC.style.display="flex";else wC.style.display="none";}
-        var bZ=document.getElementById('preview-biz'); if(bZ){bZ.className="text-lg font-bold text-gray-200 leading-snug whitespace-pre-wrap"; bZ.innerText=formatBizTimeJp(String(currentCandidate.parsedBiz||currentCandidate.bizHours||"---"),rD);}
-      } else { var dN=document.getElementById('preview-dest-name'); if(dN)dN.innerText="未選択"; }
-      if (isFirstStepCompleted) setTimeout(function(){adjustInputContainerY();},50);
-    } catch(e) { console.error("updatePreview Error:", e); }
-  };
-
-  function executeCompleteAutomation() {
-    if(!currentCandidate){showToast("⚠️ 目的地が選ばれていません！");return;} if(isDateDirty||isBusDirty||isRouteDirty||isConfirmDirty||isWeatherDirty){showToast("⚠️ 赤く光っている項目を確認してください");return;}
+  window.executeCompleteAutomation = function() {
+    if(!currentCandidate){window.showToast("⚠️ 目的地が選ばれていません！"); window.vibrateBadge(1); return;} if(isDateDirty||isBusDirty||isRouteDirty||isConfirmDirty||isWeatherDirty){window.openErrorPanelIfNeeded(); return;}
     var rD=document.getElementById('date-input').value, fD=""; if(rD){var p=rD.split('-');if(p.length===3)fD="'"+p[0]+"/"+p[1]+"/"+p[2];}
     var cT=window.calculatedTimesRaw||{}, py={name:currentCandidate.name,address:currentCandidate.parsedAddress,placeId:currentCandidate.placeId,date:fD,stayTime:document.getElementById('stay-select').value,calType:document.getElementById('cal-account-select').value,busTime:document.getElementById('bus-time-select').value?("'"+document.getElementById('bus-time-select').value):"",startTime:cT.rawStart?("'"+cT.rawStart):"",arrTime:cT.rawArr?("'"+cT.rawArr):"",retTime:cT.rawRet?("'"+cT.rawRet):"",postal:currentCandidate.postal||"",building:currentCandidate.parsedBuilding||"",phone:currentCandidate.parsedPhone,website:currentCandidate.website||"",bizHours:currentCandidate.parsedBiz,holiday:window.currentDayInfo?window.currentDayInfo.holiday:"",seasonalEvent:window.currentDayInfo?window.currentDayInfo.seasonal:"",icon:""};
-    showToast("⏳ 送信中..."); var sB=document.getElementById('submit-btn'); if(sB)sB.innerHTML='<span class="animate-spin inline-block">⏳</span><span>送信中...</span>';
-    if(typeof google!=='undefined') google.script.run.withSuccessHandler(function(r){showToast("✨ 完了しました！");if(sB){sB.innerHTML='<span>完了</span>';sB.classList.add('pointer-events-none','bg-gray-600');sB.classList.remove('bg-blue-600');}hasSubmitted=true;isConfirmDirty=false;updateBadges();setTimeout(window.goToDeckScreen,1500);}).withFailureHandler(function(e){showToast("❌ エラー: "+e.message);if(sB)sB.innerHTML='<span>送信</span>';}).executeFullAutomation(py,2); else setTimeout(function(){showToast("✨ 完了しました！");if(sB){sB.innerHTML='<span>完了</span>';sB.classList.add('pointer-events-none','bg-gray-600');sB.classList.remove('bg-blue-600');}hasSubmitted=true;isConfirmDirty=false;updateBadges();setTimeout(window.goToDeckScreen,1500);},1500);
+    window.showToast("⏳ 送信中..."); var sB=document.getElementById('submit-btn'); if(sB)sB.innerHTML='<span class="animate-spin inline-block">⏳</span><span>送信中...</span>';
+    if(typeof google!=='undefined') google.script.run.withSuccessHandler(function(r){window.showToast("✨ 完了しました！");if(sB){sB.innerHTML='<span>完了</span>';sB.classList.add('pointer-events-none','bg-gray-600');sB.classList.remove('bg-blue-600');}hasSubmitted=true;isConfirmDirty=false;window.updateBadges();setTimeout(window.goToDeckScreen,1500);}).withFailureHandler(function(e){window.showToast("❌ エラー: "+e.message);if(sB)sB.innerHTML='<span>送信</span>';}).executeFullAutomation(py,2); else setTimeout(function(){window.showToast("✨ 完了しました！");if(sB){sB.innerHTML='<span>完了</span>';sB.classList.add('pointer-events-none','bg-gray-600');sB.classList.remove('bg-blue-600');}hasSubmitted=true;isConfirmDirty=false;window.updateBadges();setTimeout(window.goToDeckScreen,1500);},1500);
   }
 
-  function validateStep() {
-    var step = editingStep !== null ? editingStep : currentStep;
-    var stepStr = getStepIdStr(step);
-    if (stepStr === "5") stepStr = "route"; 
-    var btn = document.getElementById('btn-next-' + stepStr);
-    var disabled = true;
-    if (step === 1) { disabled = !currentCandidate; var bM = document.getElementById('btn-master-reg'); if(bM) { if(!disabled) bM.classList.remove('opacity-50','cursor-not-allowed'); else bM.classList.add('opacity-50','cursor-not-allowed'); } } 
-    else if (step === 2) { disabled = !document.getElementById('date-input').value; } 
-    else if (step === 3) { var bVal = document.getElementById('bus-time-select').value; disabled = !bVal || bVal === "error"; } 
-    else if (step === 4) { disabled = !document.getElementById('stay-select').value; } 
-    else if (step === 5) { disabled = (selectedRouteIndex === null); }
-    if (btn) btn.disabled = disabled;
+  window.validateStep = function() {
+    try {
+      var step = editingStep !== null ? editingStep : currentStep;
+      var stepStr = window.getStepIdStr(step);
+      if (stepStr === "5") stepStr = "route"; 
+      
+      var btn = document.getElementById('btn-next-' + stepStr);
+      var disabled = true;
+      
+      if (step === 1) {
+        disabled = !currentCandidate;
+      } else if (step === 2) {
+        disabled = !document.getElementById('date-input').value;
+      } else if (step === 3) {
+        var bVal = document.getElementById('bus-time-select').value;
+        disabled = !bVal || bVal === "error" || bVal === "";
+      } else if (step === 4) {
+        disabled = !document.getElementById('stay-select').value;
+      } else if (step === 5) {
+        disabled = (selectedRouteIndex === null);
+      }
+      
+      if (btn) btn.disabled = disabled;
+    } catch(e) { console.error("validateStep Error:", e); }
   }
 
-  function canLeaveCurrentStep(step) {
+  window.canLeaveCurrentStep = function(step) {
     if (step === 1) return !!currentCandidate;
     if (step === 2) return !!document.getElementById('date-input').value;
-    if (step === 3) { var bVal = document.getElementById('bus-time-select').value; return !!bVal && bVal !== "error"; }
+    if (step === 3) { var bVal = document.getElementById('bus-time-select').value; return !!bVal && bVal !== "error" && bVal !== ""; }
     if (step === 4) return !!document.getElementById('stay-select').value;
     if (step === 5) return (selectedRouteIndex !== null);
     return true;
   }
 
-  function closeEditPanel(step) {
+  window.closeEditPanel = function(step) {
     var idx = openEditPanels.indexOf(step);
     if (idx !== -1) openEditPanels.splice(idx, 1);
     if (editingStep === step) {
@@ -909,11 +516,11 @@
     window.updatePreview();
   }
 
-  function updateDayInfoAndValidate() {
+  window.updateDayInfoAndValidate = function() {
     var dInput = document.getElementById('date-input');
     if (!dInput) return;
     var dStr = dInput.value;
-    if (!dStr) { validateStep(); updateBadges(); return; }
+    if (!dStr) { window.validateStep(); window.updateBadges(); return; }
     
     if (window.lastFetchedDate !== dStr) {
       window.lastFetchedDate = dStr;
@@ -923,45 +530,455 @@
       var successHandler = function(res) {
         if (res && !res.error) {
           window.currentDayInfo = res;
+          
+          var dateColorClass = "text-white"; 
+          var d = new Date(dStr);
+          if (res.holiday || d.getDay() === 0) dateColorClass = "text-red-400"; 
+          else if (d.getDay() === 6) dateColorClass = "text-blue-400"; 
+
           if (bSelect) {
-            bSelect.innerHTML = '<option value="">▼ 選択</option>';
-            res.busTimes.forEach(function(time) { var opt = document.createElement('option'); opt.value = time; opt.text = time; bSelect.appendChild(opt); });
+            bSelect.innerHTML = '<option value="" style="color:#111827">▼ 選択</option>';
+            res.busTimes.forEach(function(time) { 
+              var opt = document.createElement('option'); 
+              opt.value = time; opt.text = time; 
+              opt.className = dateColorClass + " font-black";
+              bSelect.appendChild(opt); 
+            });
+            bSelect.className = bSelect.className.replace(/text-[a-z]+-\d+0/g, '').trim() + " " + dateColorClass;
             if (originalValues.step3) bSelect.value = originalValues.step3;
           }
         } else { if (bSelect) bSelect.innerHTML = '<option value="error">取得失敗</option>'; }
-        validateStep(); window.updatePreview(); updateBadges();
+        window.validateStep(); window.updatePreview(); window.updateBadges();
       };
       
-      if (typeof google !== 'undefined') google.script.run.withSuccessHandler(successHandler).withFailureHandler(function() { if (bSelect) bSelect.innerHTML = '<option value="error">通信エラー</option>'; validateStep(); updateBadges(); }).getDayInfoForWeb(dStr);
+      if (typeof google !== 'undefined') google.script.run.withSuccessHandler(successHandler).withFailureHandler(function() { if (bSelect) bSelect.innerHTML = '<option value="error">通信エラー</option>'; window.validateStep(); window.updateBadges(); }).getDayInfoForWeb(dStr);
       else setTimeout(function() { successHandler({ holiday: "", seasonal: "", dayType: "平日", colorClass: "text-white", busTimes: ["08:00", "08:30", "09:00", "09:30", "10:00"] }); }, 800);
     } else {
-      validateStep(); window.updatePreview(); updateBadges();
+      window.validateStep(); window.updatePreview(); window.updateBadges();
     }
   }
 
-  function onBusTimeChange(sel) { validateStep(); window.updatePreview(); updateBadges(); }
+  window.onBusTimeChange = function(sel) { 
+    if (sel && sel.options[sel.selectedIndex]) {
+      var cls = sel.options[sel.selectedIndex].className || "text-white";
+      sel.className = sel.className.replace(/text-[a-z]+-\d+0/g, '').trim() + " " + cls;
+    }
+    window.validateStep(); window.updatePreview(); window.updateBadges(); 
+  }
 
-  function setStayTime(val, btn) {
+  window.setStayTime = function(val, btn) {
     var sInput = document.getElementById('stay-select');
     if (sInput) sInput.value = val;
     document.querySelectorAll('.stay-btn').forEach(function(b) { b.classList.remove('bg-blue-600', 'text-white', 'border-blue-400'); b.classList.add('bg-gray-800', 'text-gray-300', 'border-gray-600'); });
     if (btn) { btn.classList.remove('bg-gray-800', 'text-gray-300', 'border-gray-600'); btn.classList.add('bg-blue-600', 'text-white', 'border-blue-400'); }
-    validateStep(); window.updatePreview(); updateBadges();
+    window.validateStep(); window.updatePreview(); window.updateBadges();
   }
 
-  function showToast(msg) {
-    var t = document.getElementById('toast'); if (!t) return;
-    t.innerText = msg; t.classList.add('show');
-    clearTimeout(window.toastTimeout);
-    window.toastTimeout = setTimeout(function() { t.classList.remove('show'); }, 3000);
+  window.setTransformVarsDynamic = function(panel, stepNum, zOffsetVal, animType) {
+    if(!panel) return;
+    var badge = document.getElementById('badge-' + window.getBadgeIdStr(stepNum)), inputC = document.getElementById('input-container');
+    if(!inputC) return;
+    var oldD = panel.style.display, oldV = panel.style.visibility, oldT = panel.style.transform;
+    if (oldD === 'none' || oldD === '') { panel.style.visibility = 'hidden'; panel.style.display = 'flex'; }
+    panel.style.transform = 'none'; void panel.offsetWidth;
+    var pRect = panel.getBoundingClientRect(), cRect = inputC.getBoundingClientRect(), tx = 0, ty = 0;
+    
+    var badgeArea = document.getElementById('badge-area');
+    var baseTop = badgeArea ? (badgeArea.offsetTop + badgeArea.offsetHeight + 14) : 280; 
+    var deltaY = baseTop - cRect.top; 
+    
+    if (badge && badgeArea && badgeArea.style.display !== 'none' && badge.getBoundingClientRect().width > 0) {
+      var bRect = badge.getBoundingClientRect(), bCx = bRect.left + (bRect.width / 2), bCy = bRect.top + (bRect.height / 2), pCx = pRect.left + (pRect.width / 2), pCy;
+      if (animType === 'pop') { pCy = pRect.top + 60; panel.style.transformOrigin = 'center 60px'; ty = bCy - pCy - deltaY; } 
+      else { pCy = pRect.top + (pRect.height / 2); panel.style.transformOrigin = 'center center'; ty = bCy - pCy; }
+      tx = bCx - pCx;
+    } else {
+      tx = 0; ty = (animType === 'pop') ? 50 : -50;
+      panel.style.transformOrigin = 'center 40px';
+    }
+    
+    panel.style.transform = oldT;
+    if (oldD === 'none' || oldD === '') { panel.style.display = 'none'; panel.style.visibility = oldV; }
+    panel.style.setProperty('--tx', tx + 'px'); panel.style.setProperty('--ty', ty + 'px'); panel.style.setProperty('--z-offset', (zOffsetVal || 0) + 'px');
+  }
+
+  window.adjustInputContainerY = function() {
+    if (!isFirstStepCompleted) return;
+    var badgeArea = document.getElementById('badge-area'), iC = document.getElementById('input-container');
+    if (badgeArea && iC) {
+      var baseTop = badgeArea.offsetTop + badgeArea.offsetHeight + 14; 
+      iC.style.position = 'absolute';
+      iC.style.transition = (iC.style.top === "" || iC.style.top === "0px") ? 'top 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)' : 'top 0.3s ease-out';
+      iC.style.top = baseTop + 'px';
+      var aH = 0;
+      var measure = function(p, z) { if(!p) return 0; var oD=p.style.display, oV=p.style.visibility; if(oD==='none'||oD===''){p.style.visibility='hidden'; p.style.display='flex';} void p.offsetWidth; var h=p.offsetHeight+(z||0); if(oD==='none'||oD===''){p.style.display='none'; p.style.visibility=oV;} return h; };
+      for (var i = 0; i < openEditPanels.length; i++) { var e = document.getElementById('step-' + window.getStepIdStr(openEditPanels[i])); if(e) aH = Math.max(aH, measure(e, 60*(i+1))); }
+      if (editingStep === null || !hasSubmitted) { var m = document.getElementById('step-' + window.getStepIdStr(maxReachedStep)); aH = Math.max(aH, measure(m, 0)); }
+      iC.style.height = aH + 'px'; setTimeout(function() { document.getElementById('main-wrapper').style.minHeight = (baseTop + aH + 40) + 'px'; }, 300); 
+    }
+  }
+
+  window.playAnimation = function(el, cls, ms, cb) {
+    if(!el) { if(cb) cb(); return; } el.className = el.className.replace(/anim-[a-zA-Z0-9-]+/g, '').trim();
+    requestAnimationFrame(function() { requestAnimationFrame(function() { el.classList.add(cls); var h = false, onE = function(e) { if(e&&e.target!==el) return; if(h) return; h = true; el.removeEventListener('animationend', onE); el.classList.remove(cls); if(cb) cb(); }; el.addEventListener('animationend', onE); setTimeout(onE, ms+50); }); });
+  }
+
+  window.resetPanelStyles = function(p) { if(!p) return; p.style.display='none'; p.style.opacity=''; p.classList.remove('edit-overlay'); p.style.zIndex=''; p.style.transform=''; p.style.transition=''; }
+
+  window.triggerBounce = function(e, m) { if(!e) return; e.classList.remove('anim-bounce'); void e.offsetWidth; e.classList.add('anim-bounce'); if(m){ m.classList.remove('anim-bounce'); void m.offsetWidth; m.classList.add('anim-bounce'); } setTimeout(function(){ e.classList.remove('anim-bounce'); if(m) m.classList.remove('anim-bounce'); }, 400); }
+
+  window.applyBadgeGreenPop = function(sNum) { var id = window.getBadgeIdStr(sNum), b = document.getElementById('badge-'+id), o = document.getElementById('ok-'+id); if (b) { b.classList.remove('badge-wait', 'badge-edit', 'badge-dirty'); b.classList.add('badge-completed'); window.triggerBounce(b, o); if(o) { o.style.display = 'flex'; o.className = "mini-badge ok-mode anim-bounce"; o.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>'; } setTimeout(function(){ window.updateBadges(); }, 400); } }
+
+  window.vibrateBadge = function(s) { var id=window.getBadgeIdStr(s), mE=document.getElementById('err-num-'+id), mO=document.getElementById('ok-'+id), t=(mE&&mE.style.display!=='none')?mE:(mO&&mO.style.display!=='none'?mO:document.getElementById('badge-'+id)); if(t){ t.classList.remove('anim-shake'); void t.offsetWidth; t.classList.add('anim-shake'); setTimeout(function(){t.classList.remove('anim-shake');},300); } }
+
+  window.reorderEditPanels = function() { for(var i=0;i<openEditPanels.length;i++){ var s=openEditPanels[i], p=document.getElementById('step-'+window.getStepIdStr(s)); if(p){ var z=60*(i+1); p.style.transition='transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'; p.style.transform='translateY('+z+'px)'; p.style.zIndex=1000+i; window.setTransformVarsDynamic(p, s, z, 'suck'); } } }
+
+  window.enforceErrorPanels = function() {
+      var q = window.getErrorQueue(); if(q.length===0) return false;
+      window.isEnforcingErrors = true; 
+      var b = document.getElementById('badge-area'); if(b) window.scrollTo({ top: b.getBoundingClientRect().top + window.pageYOffset - 75, behavior: 'smooth' }); 
+      var toClose=[], toSlide=[], toPop=[], oldS=openEditPanels.slice();
+      for(var i=openEditPanels.length-1;i>=0;i--){ var s=openEditPanels[i]; if(!q.includes(s) && s!=='weather'){ toClose.push(s); openEditPanels.splice(i,1); } }
+      var newS=[]; for(var i=q.length-1;i>=0;i--) newS.push(q[i]);
+      if(newS.join(',')===openEditPanels.join(',') && toClose.length===0) { window.isEnforcingErrors=false; return false; }
+      openEditPanels=newS; editingStep=openEditPanels[openEditPanels.length-1]; currentStep=editingStep;
+      q.forEach(function(s){ if(oldS.includes(s)) toSlide.push(s); else toPop.push(s); });
+
+      var step1 = function(cb) {
+          if(toClose.length===0) return cb(); var c=0, d=0;
+          toClose.reverse().forEach(function(s){
+              setTimeout(function(){ var p=document.getElementById('step-'+window.getStepIdStr(s)); if(p){ window.setTransformVarsDynamic(p,s,60*oldS.indexOf(s),'suck'); setTimeout(function(){window.applyBadgeGreenPop(s);},600); window.playAnimation(p,'anim-suck',800,function(){window.resetPanelStyles(p); c++; if(c===toClose.length)cb();}); } else { c++; if(c===toClose.length)cb(); } }, d); d+=150;
+          });
+      };
+      var step2 = function(cb) {
+          if(toSlide.length===0) return cb(); var c=0, d=0;
+          toSlide.reverse().forEach(function(s){
+              setTimeout(function(){ var p=document.getElementById('step-'+window.getStepIdStr(s)); if(p){ p.style.display='flex'; p.classList.add('edit-overlay'); var z=60*openEditPanels.indexOf(s); p.style.zIndex=1000+openEditPanels.indexOf(s); window.applyPanelErrorStyle(p,s); p.style.transform='translateY('+z+'px)'; p.style.setProperty('--z-offset',z+'px'); window.playAnimation(p,'anim-slide-error',1800,function(){p.style.transform='translateY('+z+'px)'; c++; if(c===toSlide.length)cb();}); } else { c++; if(c===toSlide.length)cb(); } }, d); d+=150;
+          });
+      };
+      var step3 = function(cb) {
+          if(toPop.length===0) return cb(); var c=0, d=0;
+          toPop.reverse().forEach(function(s){
+              setTimeout(function(){ var p=document.getElementById('step-'+window.getStepIdStr(s)); if(p){ p.style.display='flex'; p.classList.add('edit-overlay'); var z=60*openEditPanels.indexOf(s); p.style.zIndex=1000+openEditPanels.indexOf(s); window.setTransformVarsDynamic(p,s,z,'pop'); window.applyPanelErrorStyle(p,s); p.style.transform=''; window.playAnimation(p,'anim-pop-error',1800,function(){p.style.transform='translateY('+z+'px)'; c++; if(c===toPop.length)cb();}); } else { c++; if(c===toPop.length)cb(); } }, d); d+=150;
+          });
+      };
+      step1(function(){ step2(function(){ step3(function(){ window.adjustInputContainerY(); setTimeout(function() { var i = document.getElementById('input-container'); if(i) { var r = i.getBoundingClientRect(); if (r.bottom > window.innerHeight) window.scrollBy({ top: r.bottom - window.innerHeight + 24, behavior: 'smooth' }); } }, 150); window.updateBadges(); window.isEnforcingErrors=false; if(window.pendingWeatherClose){window.pendingWeatherClose(); window.pendingWeatherClose=null;} }); }); });
+      return true;
+  }
+
+  // 🌟 初回誤ポップ（緑発光）防止の強化対応
+  window.updateBadges = function() {
+    var q=window.getErrorQueue(), bArr=[{n:1,id:'1'},{n:2,id:'2'},{n:3,id:'3'},{n:4,id:'4'},{n:5,id:'route'},{n:6,id:'confirm'},{n:'weather',id:'weather'}];
+    bArr.forEach(function(bi) {
+      var b=document.getElementById('badge-'+bi.id), o=document.getElementById('ok-'+bi.id); if(!b) return;
+      var errE=document.getElementById('err-num-'+bi.id); if(!errE){ errE=document.createElement('div'); errE.id='err-num-'+bi.id; errE.className='mini-badge err-mode'; b.appendChild(errE); }
+      var eIdx=q.indexOf(bi.n);
+      if(eIdx!==-1){ errE.innerText=eIdx+1; errE.style.display='flex'; errE.classList.remove('anim-flip-out'); } 
+      else { if(errE.style.display!=='none'&&!errE.classList.contains('anim-flip-out')){ errE.classList.add('anim-flip-out'); setTimeout(function(){errE.style.display='none'; errE.classList.remove('anim-flip-out');},400); } }
+
+      var isC=false;
+      // STEP1が完了していない間は、他バッジは強制的に非完了扱い
+      if (!isFirstStepCompleted && bi.n !== 1) {
+        isC = false;
+      } else {
+        if(bi.n===1) isC=!!currentCandidate; 
+        if(bi.n===2) isC=!!document.getElementById('date-input').value; 
+        if(bi.n===3){var bv=document.getElementById('bus-time-select').value; isC=!!(bv&&bv!=="error"&&bv!=="");} 
+        if(bi.n===4) isC=!!document.getElementById('stay-select').value; 
+        if(bi.n===5) isC=(selectedRouteIndex!==null); 
+        if(bi.n===6) isC=hasSubmitted; 
+        if(bi.n==='weather') isC=(b.dataset.completed==='true');
+      }
+
+      var nS='badge-wait';
+      if(eIdx!==-1) nS='badge-dirty'; else if(openEditPanels.indexOf(bi.n)!==-1||editingStep===bi.n) nS='badge-edit'; else if(!hasSubmitted&&bi.n===maxReachedStep&&editingStep===null) nS='badge-wait'; else if(isC) nS='badge-completed';
+      
+      var oS=b.dataset.lastState||'badge-wait'; b.dataset.lastState=nS; var pB=b.classList.contains('anim-bounce');
+      // ユーザーの意図した操作直後のみ緑色バウンス
+      if(oS!=='badge-dirty'&&nS==='badge-dirty'&&!pB) window.triggerBounce(b, o);
+      b.className='badge-btn '+nS+(pB?' anim-bounce':''); b.disabled=(nS==='badge-wait'); b.style.pointerEvents=(nS==='badge-wait')?'none':'auto';
+      if(o){ var oWB=o.classList.contains('anim-bounce'); if(nS==='badge-completed'||nS==='badge-edit'){ o.style.display='flex'; o.className="mini-badge "+(nS==='badge-edit'?'edit-mode':'ok-mode')+(oWB?' anim-bounce':''); o.innerHTML=(nS==='badge-edit'?(bi.n==='weather'?'<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>':'<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z"></path></svg>'):'<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>'); } else { o.style.display='none'; } }
+    });
+    
+    var cBtn=document.getElementById('badge-cancel');
+    if(cBtn){ var cWB=cBtn.classList.contains('anim-bounce'); if(q.length>0){ cBtn.dataset.lastState='inactive'; cBtn.disabled=true; cBtn.className='badge-btn badge-wait'+(cWB?' anim-bounce':''); cBtn.style.pointerEvents='none'; } else if(openEditPanels.length>0){ if(cBtn.dataset.lastState!=='active'&&!cWB) window.triggerBounce(cBtn,null); cBtn.dataset.lastState='active'; cBtn.disabled=false; cBtn.className='badge-btn badge-cancel-active'+(cWB?' anim-bounce':''); cBtn.style.pointerEvents='auto'; } else { cBtn.dataset.lastState='inactive'; cBtn.disabled=true; cBtn.className='badge-btn badge-wait'+(cWB?' anim-bounce':''); cBtn.style.pointerEvents='none'; } }
+  }
+
+  window.handlePanelButton = function(s) {
+    try {
+      if(!window.canLeaveCurrentStep(s)){ window.vibrateBadge(s); return; }
+      var p=document.getElementById('step-'+window.getStepIdStr(s));
+      if(!p){ if(s===1){currentStep=2;maxReachedStep=2;isFirstStepCompleted=true;window.tapBadge(2);}else if(s===2){currentStep=3;maxReachedStep=3;window.tapBadge(3);}else if(s===3){currentStep=4;maxReachedStep=4;window.tapBadge(4);}else if(s===4){currentStep=5;maxReachedStep=5;window.tapBadge(5);} return; }
+      
+      var isE=(editingStep!==null);
+      if(isE) { if(s>=1&&s<=4){ if(window.checkValuesChanged()){if(maxReachedStep>=5){isRouteDirty=true;isWeatherDirty=true;} if(hasSubmitted)isConfirmDirty=true;} } if(s===2)isDateDirty=false; if(s===3)isBusDirty=false; if(s===5)isRouteDirty=false; if(s===6)isConfirmDirty=false; }
+      
+      if(s===1 && !isFirstStepCompleted) {
+          currentStep=2; maxReachedStep=2; 
+          if(!document.getElementById('date-input').value) document.getElementById('date-input').value = new Date(Date.now()-(new Date().getTimezoneOffset()*60000)).toISOString().split('T')[0];
+          window.updateDayInfoAndValidate(); 
+          
+          var pDest = document.getElementById('preview-dest-area');
+          var pTime = document.getElementById('timeline-area-wrapper');
+          var pBadg = document.getElementById('badge-area');
+          if (pDest) { pDest.style.display = 'flex'; window.playAnimation(pDest, 'anim-slide-down-in', 600); }
+          if (pTime) { pTime.style.display = 'block'; }
+          if (pBadg) { pBadg.style.display = 'block'; }
+
+          var iC = document.getElementById('input-container');
+          if (iC) { iC.style.position = 'absolute'; }
+
+          window.setTransformVarsDynamic(p,1,0,'suck'); setTimeout(function(){window.applyBadgeGreenPop(1);},600);
+          window.playAnimation(p,'anim-suck',800,function(){ 
+            window.resetPanelStyles(p); 
+            isFirstStepCompleted=true; 
+            window.updateBadges(); 
+            window.adjustInputContainerY(); 
+            requestAnimationFrame(function(){
+              requestAnimationFrame(function(){
+                var nP=document.getElementById('step-2'); if(!nP)return; 
+                nP.style.opacity='0'; nP.style.display='flex'; nP.style.zIndex='20'; 
+                window.setTransformVarsDynamic(nP,2,0,'pop'); window.applyPanelErrorStyle(nP,2); 
+                window.playAnimation(nP,'anim-slide-up-in',800,function(){nP.style.opacity='';}); 
+                setTimeout(function() { var i = document.getElementById('input-container'); if(i) { var r = i.getBoundingClientRect(); if (r.bottom > window.innerHeight) window.scrollBy({ top: r.bottom - window.innerHeight + 24, behavior: 'smooth' }); } }, 150); window.validateStep();
+              });
+            }); 
+          }); return;
+      }
+      
+      if(!isE && s!=='weather') {
+          var nS=s+1; 
+          if(s!==5) { 
+              window.setTransformVarsDynamic(p,s,0,'suck'); setTimeout(function(){window.applyBadgeGreenPop(s);},600); 
+              window.playAnimation(p,'anim-suck',800,function(){ 
+                window.resetPanelStyles(p); currentStep=nS; if(nS>maxReachedStep)maxReachedStep=nS; 
+                window.updateBadges(); window.adjustInputContainerY(); 
+                requestAnimationFrame(function(){
+                  requestAnimationFrame(function(){
+                    var nP=document.getElementById('step-'+window.getStepIdStr(nS)); if(!nP)return; 
+                    nP.style.opacity='0'; nP.style.display='flex'; nP.style.zIndex='20'; 
+                    window.setTransformVarsDynamic(nP,nS,0,'pop'); window.applyPanelErrorStyle(nP,nS); 
+                    window.playAnimation(nP,'anim-slide-up-in',800,function(){nP.style.opacity='';}); 
+                    if(nS===5) window.startRouteSearch(); 
+                    setTimeout(function() { var i = document.getElementById('input-container'); if(i) { var r = i.getBoundingClientRect(); if (r.bottom > window.innerHeight) window.scrollBy({ top: r.bottom - window.innerHeight + 24, behavior: 'smooth' }); } }, 150); window.validateStep();
+                  });
+                }); 
+              }); return; 
+          }
+      }
+      
+      if(isE && s>=1 && s<=4) { 
+          var z=60*(openEditPanels.indexOf(s)+1); 
+          window.setTransformVarsDynamic(p,s,z,'suck'); setTimeout(function(){window.applyBadgeGreenPop(s);},600); 
+          window.playAnimation(p,'anim-suck',800,function(){ 
+            window.resetPanelStyles(p); window.closeEditPanel(s); window.enforceErrorPanels(); window.reorderEditPanels(); 
+            if(!window.openErrorPanelIfNeeded()){window.adjustInputContainerY(); window.updateBadges(); window.validateStep();} 
+          }); return; 
+      }
+
+      if(s===5) { 
+          window.setTransformVarsDynamic(p,5,(isE?60*(openEditPanels.indexOf(5)+1):0),'suck'); setTimeout(function(){window.applyBadgeGreenPop(5);},600); 
+          window.playAnimation(p,'anim-suck',800,function(){ 
+            window.resetPanelStyles(p); isRouteDirty=false; if(hasSubmitted)isConfirmDirty=true; 
+            var c=window.checkValuesChanged()||isWeatherDirty; 
+            if(isE){ 
+              window.closeEditPanel(5); window.enforceErrorPanels(); window.reorderEditPanels(); 
+              if(c){isWeatherDirty=true; window.fetchWeather(true);} 
+            } else { 
+              maxReachedStep=6; currentStep=6; window.fetchWeather(false); 
+            } 
+            window.updateBadges(); 
+            if(!isE){ 
+              requestAnimationFrame(function(){
+                requestAnimationFrame(function(){
+                  var cP=document.getElementById('step-6'); if(!cP)return; 
+                  cP.style.opacity='0'; cP.style.display='flex'; cP.classList.remove('edit-overlay'); 
+                  window.setTransformVarsDynamic(cP,6,0,'pop'); 
+                  window.playAnimation(cP,'anim-slide-up-in',800,function(){cP.style.opacity='';}); 
+                  setTimeout(function(){window.adjustInputContainerY();},50); 
+                  setTimeout(function() { var i = document.getElementById('input-container'); if(i) { var r = i.getBoundingClientRect(); if (r.bottom > window.innerHeight) window.scrollBy({ top: r.bottom - window.innerHeight + 24, behavior: 'smooth' }); } }, 150); window.validateStep();
+                });
+              }); 
+            } else { 
+              if(!c)window.adjustInputContainerY(); window.openErrorPanelIfNeeded(); 
+            } 
+          }); return; 
+      }
+
+      if(s==='weather') { 
+          var z=60*(openEditPanels.indexOf(s)+1); 
+          window.setTransformVarsDynamic(p,s,z,'suck'); setTimeout(function(){window.applyBadgeGreenPop(s);},600); 
+          window.playAnimation(p,'anim-suck',800,function(){ 
+            window.resetPanelStyles(p); window.closeEditPanel(s); window.enforceErrorPanels(); window.reorderEditPanels(); 
+            window.adjustInputContainerY(); window.updateBadges(); window.validateStep(); 
+          }); return; 
+      }
+    } catch(e) { if(s===1){currentStep=2;maxReachedStep=2;isFirstStepCompleted=true;window.tapBadge(2);}else if(s===2){currentStep=3;maxReachedStep=3;window.tapBadge(3);}else if(s===3){currentStep=4;maxReachedStep=4;window.tapBadge(4);}else if(s===4){currentStep=5;maxReachedStep=5;window.tapBadge(5);} }
+  }
+
+  window.tapBadge = function(t) {
+    var bId=window.getBadgeIdStr(t), b=document.getElementById('badge-'+bId); if(!b||b.classList.contains('badge-wait')) return; 
+    var q=window.getErrorQueue();
+    if(q.length>0){ if(t!==q[0]){window.vibrateBadge(q[0]);return;} else {if(editingStep===t){window.vibrateBadge(t);return;}} } else { if(editingStep!==null&&editingStep===t){window.handlePanelButton(t);return;} else if(editingStep!==null&&!window.canLeaveCurrentStep(editingStep)){window.vibrateBadge(editingStep);return;} }
+    
+    var idx=openEditPanels.indexOf(t);
+    if(idx!==-1){ if(window.checkValuesChanged()){if(maxReachedStep>=5){isRouteDirty=true;isWeatherDirty=true;} if(hasSubmitted)isConfirmDirty=true;} var eP=document.getElementById('step-'+window.getStepIdStr(t)); if(eP){ var z=60*(idx+1); window.setTransformVarsDynamic(eP,t,z,'suck'); setTimeout(function(){window.applyBadgeGreenPop(t);},600); window.playAnimation(eP,'anim-suck',800,function(){window.resetPanelStyles(eP);window.closeEditPanel(t);window.enforceErrorPanels();window.reorderEditPanels();var iC=document.getElementById('input-container'); iC.style.transition='top 0.3s ease-out'; if(!window.openErrorPanelIfNeeded()){window.adjustInputContainerY();window.updateBadges();window.validateStep();}}); } return; }
+    
+    if(editingStep===null){ var bP=document.getElementById('step-'+window.getStepIdStr(maxReachedStep)); if(bP)bP.style.zIndex='10'; window.captureOriginalValues(); }
+    openEditPanels.push(t); editingStep=t; currentStep=t; window.updateBadges(); 
+    var nP=document.getElementById('step-'+window.getStepIdStr(t)); if(nP){ nP.classList.add('edit-overlay'); nP.style.position='absolute'; nP.style.zIndex=1000+openEditPanels.length; nP.style.display='flex'; var tz=60*openEditPanels.length; window.setTransformVarsDynamic(nP,t,tz,'pop'); window.applyPanelErrorStyle(nP,t); nP.style.transform=''; if(t===5&&(isRouteDirty||!document.getElementById('route-candidates').innerHTML.includes('route-card')))window.startRouteSearch(); var iC=document.getElementById('input-container'); iC.style.transition='top 0.3s ease-out'; window.adjustInputContainerY(); window.playAnimation(nP,'anim-pop',800,function(){nP.style.transform='translateY('+tz+'px)';}); setTimeout(function() { var i = document.getElementById('input-container'); if(i) { var r = i.getBoundingClientRect(); if (r.bottom > window.innerHeight) window.scrollBy({ top: r.bottom - window.innerHeight + 24, behavior: 'smooth' }); } }, 150); } window.validateStep();
+  }
+
+  // 🌟 天気取得処理
+  window.fetchWeather = function(isRe) {
+    try {
+      var dStr=document.getElementById('date-input').value, bS=document.getElementById('bus-time-select'), tStr=bS&&bS.value?bS.value:"12:00", dest=currentCandidate?currentCandidate.address:"";
+      var dB=document.getElementById('weather-detail-content'), b=document.getElementById('badge-weather');
+      if(!dStr||!dest)return; if(dB)dB.innerHTML='<div class="text-center w-full"><span class="animate-spin inline-block text-3xl">⏳</span><br/>取得中...</div>'; 
+      if(b)b.dataset.completed='false';
+      if(isRe)isWeatherDirty=true; else isWeatherDirty=false; window.updateBadges();
+      
+      var hS=function(r){ 
+        if(r&&r.icon){ 
+          var s=window.getSvgForWeather(r.icon); 
+          if(dB){ 
+            dB.innerHTML='<div class="flex-1 bg-gray-800 rounded-xl p-4 border border-gray-600 shadow-inner flex flex-col items-center"><div class="text-[12px] font-bold text-gray-400 mb-2">出発</div><div class="w-10 h-10 text-blue-300 mb-2">'+s+'</div><div class="text-2xl font-black text-white">'+r.temp+'℃</div></div>' +
+                         '<div class="flex-1 bg-gray-800 rounded-xl p-4 border border-gray-600 shadow-inner flex flex-col items-center"><div class="text-[12px] font-bold text-gray-400 mb-2">到着</div><div class="w-10 h-10 text-green-400 mb-2">'+s+'</div><div class="text-2xl font-black text-white">'+r.temp+'℃</div></div>' +
+                         '<div class="flex-1 bg-gray-800 rounded-xl p-4 border border-gray-600 shadow-inner flex flex-col items-center"><div class="text-[12px] font-bold text-gray-400 mb-2">帰宅</div><div class="w-10 h-10 text-purple-300 mb-2">'+s+'</div><div class="text-2xl font-black text-white">'+r.temp+'℃</div></div>'; 
+          }
+          window.previewWeatherStart = r.icon + " " + r.temp + "℃";
+          window.previewWeatherArr = r.icon + " " + r.temp + "℃";
+          isWeatherDirty=false; 
+          if(b) b.dataset.completed='true';
+          
+          var cW=function(){ 
+            var w=openEditPanels.indexOf('weather'); 
+            if(w!==-1){
+              openEditPanels.splice(w,1); 
+              if(editingStep==='weather'){
+                editingStep=openEditPanels.length>0?openEditPanels[openEditPanels.length-1]:null; 
+                currentStep=editingStep||maxReachedStep;
+              } 
+              window.updateBadges(); 
+              var wp=document.getElementById('step-weather'); 
+              window.setTransformVarsDynamic(wp,'weather',60*w,'suck'); 
+              setTimeout(function(){window.applyBadgeGreenPop('weather');},600); 
+              window.playAnimation(wp,'anim-suck',800,function(){window.resetPanelStyles(wp);window.reorderEditPanels();window.adjustInputContainerY();});
+            } else {
+              window.updateBadges();
+              // 強制表示中以外に成功すればポップ
+              if(!window.isEnforcingErrors) setTimeout(function(){ window.applyBadgeGreenPop('weather'); }, 200);
+            } 
+          };
+          if(window.isEnforcingErrors) window.pendingWeatherClose=cW; else cW();
+        } else { isWeatherDirty=true; window.updateBadges(); if(dB) dB.innerHTML='<div class="text-gray-400 p-4">取得失敗</div>'; }
+      };
+      if(typeof google!=='undefined') google.script.run.withSuccessHandler(hS).withFailureHandler(function(e){isWeatherDirty=true;window.updateBadges();if(dB)dB.innerHTML='<div class="text-red-400 p-4">通信エラー</div>';}).getWeatherForWeb(dest,dStr,tStr); else setTimeout(function(){hS({icon:"☀️",temp:"25"});},1200);
+    } catch(e) { console.error("fetchWeather Error:", e); }
+  }
+
+  window.switchInnerTab = function(name) {
+    ['master','search'].forEach(function(t){ var e=document.getElementById('tab-'+t); if(e)e.classList[t===name?'add':'remove']('active'); });
+    var cOn="flex-1 text-white bg-blue-600 border-2 border-blue-400 font-extrabold py-4 text-2xl rounded-xl z-10 transition-colors flex items-center justify-center gap-2 shadow-lg";
+    var cOff="flex-1 text-gray-400 bg-gray-800 border-2 border-gray-600 font-extrabold py-4 text-2xl rounded-xl z-10 transition-colors flex items-center justify-center gap-2";
+    var mBtn=document.getElementById('tab-master-btn'), sBtn=document.getElementById('tab-search-btn'), n1=document.getElementById('btn-next-1');
+    if(name==='master') {
+      if(mBtn){mBtn.className=cOn; mBtn.innerHTML=window.getSvgForIcon('list','w-7 h-7 shrink-0')+'<span>一覧</span>';}
+      if(sBtn){sBtn.className=cOff; sBtn.innerHTML=window.getSvgForIcon('search','w-7 h-7 shrink-0')+'<span>検索</span>';}
+      if(n1)n1.style.display='flex'; window.onMasterSelect();
+    } else {
+      if(sBtn){sBtn.className=cOn; sBtn.innerHTML=window.getSvgForIcon('search','w-7 h-7 shrink-0')+'<span>検索</span>';}
+      if(mBtn){mBtn.className=cOff; mBtn.innerHTML=window.getSvgForIcon('list','w-7 h-7 shrink-0')+'<span>一覧</span>';}
+      if(n1)n1.style.display='none';
+    }
+  }
+
+  window.onMasterSelect = function() {
+    var selectEl = document.getElementById('master-select'); if(!selectEl) return;
+    var idx=selectEl.value, aD=document.getElementById('master-address-display');
+    if(idx===""){window.setCurrentCandidate(null); window.validateStep(); window.updateBadges(); if(aD)aD.classList.add('hidden'); return;}
+    var item=masterDataList[idx]; if(aD){aD.innerText=item.address||"住所なし"; aD.classList.remove('hidden');}
+    var b=document.getElementById('btn-master-reg'); if(b)b.classList.add('opacity-50','cursor-not-allowed'); window.setCurrentCandidate(item);
+    if(typeof google!=='undefined') google.script.run.withSuccessHandler(function(r){if(r.success&&r.data)window.setCurrentCandidate(r.data);}).getLatestPlaceDetails(String(item.placeId),String(item.name),String(item.address));
+  }
+
+  window.debounceSearch = function(e) {
+    if(e&&e.isComposing)return; clearTimeout(searchTimeout);
+    var cI=document.getElementById('city-input'), kI=document.getElementById('keyword-input');
+    var cK=cI?cI.value.trim():"", mK=kI?kI.value.trim():""; if(cK)localStorage.setItem('kamp_city',cK);
+    var p=document.getElementById('results-panel'), l=document.getElementById('candidates-list');
+    if(mK.length<2){p.classList.add('hidden');return;} var fK=cK?(cK+" "+mK):mK; p.classList.remove('hidden'); l.innerHTML='<div class="text-xl text-gray-600 font-bold p-6 text-center animate-pulse">⏳ 探しています...</div>';
+    searchTimeout=setTimeout(function(){
+      if(typeof google!=='undefined') google.script.run.withSuccessHandler(function(r){if(r.success&&r.data.length>0)window.renderCandidates(r.data);else l.innerHTML='<div class="text-xl text-red-500 font-bold p-6 text-center">見つかりませんでした</div>';}).executeWebSearch(fK,2);
+      else window.renderCandidates([{placeId:"mock1",name:"あさか医療センター",address:"埼玉県"+cK+"1-1",bizHours:"月曜:09:00〜18:00"},{placeId:"mock2",name:"青柳診療所",address:"埼玉県"+cK+"2-2",bizHours:"毎日:10:00〜20:00"}]);
+    },700);
+  }
+
+  window.renderCandidates = function(cands) {
+    var l=document.getElementById('candidates-list'); l.innerHTML="";
+    cands.forEach(function(c){ 
+      var d=document.createElement('div'); d.className="flex flex-col p-5 border-b-2 border-gray-300 hover:bg-blue-100 active:bg-blue-200 cursor-pointer transition-colors"; 
+      d.innerHTML='<span class="font-bold text-blue-900 text-2xl mb-2">'+c.name+'</span><span class="text-gray-600 text-sm leading-tight">'+c.address+'</span>'; 
+      d.onclick=function(){
+        var b=document.getElementById('btn-master-reg'); if(b) b.classList.remove('opacity-50','cursor-not-allowed'); 
+        window.setCurrentCandidate(c); document.getElementById('results-panel').classList.add('hidden'); 
+        var kI=document.getElementById('keyword-input'); if(kI) kI.value=c.name; 
+        setTimeout(function(){window.handlePanelButton(1);},100);
+      }; l.appendChild(d); 
+    });
+  }
+
+  window.setCurrentCandidate = function(c) {
+    currentCandidate=c; 
+    if(c){ 
+      var m=String(c.address||""), bN=""; 
+      if(m){var p=m.split(/[\s ]+/);if(p.length>1){m=p[0]; bN=p.slice(1).join(" ");}} 
+      currentCandidate.parsedAddress=m; currentCandidate.parsedBuilding=bN||c.building||""; 
+      currentCandidate.parsedPhone=String(c.phone||"").replace(/^\+81\s?/,'0')||"---"; 
+      currentCandidate.parsedBiz=String(c.bizHours||"---"); 
+    } 
+    window.updatePreview(); window.validateStep(); window.updateBadges();
+  }
+
+  window.startRouteSearch = function() {
+    var l=document.getElementById('route-candidates'); if(l) l.innerHTML='<div class="text-center text-gray-400 py-6 animate-pulse font-bold text-lg w-full">🗺️ 検索中...</div>'; selectedRouteIndex=null; window.validateStep(); window.updateBadges();
+    var dStr=document.getElementById('date-input')?document.getElementById('date-input').value:"", tStr=document.getElementById('bus-time-select')?document.getElementById('bus-time-select').value:"", dest=currentCandidate?currentCandidate.address:"";
+    var d=false, fn=function(suc,res){ if(d)return; d=true; try{ if(suc&&res&&res.success&&res.routes&&res.routes.length>0){window.renderRoutes(res.routes);}else{if(l)l.innerHTML='<div class="text-red-400 p-4 text-center text-lg font-bold w-full">'+(res&&res.message?res.message:'経路が見つかりませんでした')+'</div>';} }catch(e){window.renderRoutes([{summary:"バス(〇〇線) ⇨ 電車(〇〇線)\n(45分 / 5.2km)",durationMinutes:45}]);} setTimeout(function() { var i = document.getElementById('input-container'); if(i) { var r = i.getBoundingClientRect(); if (r.bottom > window.innerHeight) window.scrollBy({ top: r.bottom - window.innerHeight + 24, behavior: 'smooth' }); } }, 150); };
+    var tm=setTimeout(function(){if(!d)fn(false,{message:'タイムアウトしました'});},8000);
+    if(typeof google!=='undefined') google.script.run.withSuccessHandler(function(r){clearTimeout(tm);fn(true,r);}).withFailureHandler(function(e){clearTimeout(tm);fn(false,e);}).getRoutesForWeb(dStr,tStr,dest); else setTimeout(function(){clearTimeout(tm);fn(false);},800);
+  }
+
+  window.renderRoutes = function(rs) {
+    var l=document.getElementById('route-candidates'); l.innerHTML=""; selectedRouteIndex=null; window.selectedRouteDuration=null;
+    rs.forEach(function(r, i){ 
+      var d=document.createElement('div'); d.className='route-card bg-gray-800 border-2 border-gray-600 rounded-xl p-4 cursor-pointer transition-all min-w-[85%] snap-center shrink-0'; 
+      d.innerHTML='<div class="font-black text-blue-400 text-xl mb-2">到着まで: '+r.durationMinutes+'分</div><div class="text-base text-gray-300 whitespace-pre-wrap leading-relaxed">'+r.summary+'</div>'; 
+      d.onclick=function(){
+        document.querySelectorAll('.route-card').forEach(function(c){c.classList.remove('bg-blue-900','border-blue-400');c.classList.add('bg-gray-800','border-gray-600');}); 
+        this.classList.remove('bg-gray-800','border-gray-600'); this.classList.add('bg-blue-900','border-blue-400'); 
+        selectedRouteIndex=i+1; window.selectedRouteDuration=r.durationMinutes; 
+        window.validateStep(); window.updatePreview(); window.updateBadges();
+      }; l.appendChild(d); 
+    }); 
+    window.validateStep(); window.updatePreview(); window.updateBadges();
   }
 
   window.initAppUI = function() {
     var sE=document.createElement('style'); sE.innerHTML="@keyframes slideUpIn{0%{transform:translateY(100vh);opacity:0}100%{transform:translateY(0);opacity:1}} @keyframes suckAnim{0%{transform:translateY(var(--z-offset,0px)) scale(1);opacity:1}100%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0}} @keyframes popAnim{0%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0}100%{transform:translateY(var(--z-offset,0px)) scale(1);opacity:1}} @keyframes slideLeftRightError{0%{transform:translateX(0) translateY(var(--z-offset,0px));opacity:1}40%{transform:translateX(-100%) translateY(var(--z-offset,0px));opacity:0}60%{transform:translateX(100%) translateY(var(--z-offset,0px));opacity:0}100%{transform:translateX(0) translateY(var(--z-offset,0px));opacity:1}} @keyframes scaleOut{0%{transform:scale(1);opacity:1}100%{transform:scale(0.8);opacity:0}} @keyframes scaleIn{0%{transform:scale(0.8);opacity:0}100%{transform:scale(1);opacity:1}} .anim-slide-up-in{animation:slideUpIn .8s cubic-bezier(.2,.8,.2,1) forwards!important} .anim-suck{animation:suckAnim .8s cubic-bezier(.4,0,.2,1) forwards!important} .anim-pop{animation:popAnim .8s cubic-bezier(.2,.8,.2,1) forwards!important} .anim-slide-error{animation:slideLeftRightError 1.8s cubic-bezier(.4,0,.2,1) forwards!important} .anim-pop-error{animation:popAnim 1.8s cubic-bezier(.2,.8,.2,1) forwards!important} .anim-scale-out{animation:scaleOut .3s cubic-bezier(.4,0,.2,1) forwards!important} .anim-scale-in{animation:scaleIn .3s cubic-bezier(.2,.8,.2,1) forwards!important} @keyframes shakeVibrate{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-5px) rotate(-5deg)}40%,80%{transform:translateX(5px) rotate(5deg)}} @keyframes flipOutY{0%{transform:perspective(400px) rotateY(0);opacity:1}100%{transform:perspective(400px) rotateY(90deg);opacity:0}} .anim-shake{animation:shakeVibrate .3s ease-in-out!important} .anim-flip-out{animation:flipOutY .4s ease-in forwards!important} .mini-badge{position:absolute;top:-4px;right:-4px;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 4px rgba(0,0,0,.5);z-index:10;pointer-events:none} .ok-mode{background:#10b981;color:white} .edit-mode{background:#fbbc04;color:#422006} .err-mode{background:#ef4444;color:white;border:2px solid #1f2937;font-size:11px;font-weight:bold}"; if(!document.head.querySelector('style'))document.head.appendChild(sE);
     try{ var nT = document.getElementById('nav-title'); if(nT){ nT.classList.remove('flex-1'); nT.className += " absolute left-1/2 -translate-x-1/2"; } } catch(e){}
-    try { document.getElementById('step-1-icon').innerHTML = getSvgForIcon('map', 'w-6 h-6'); document.getElementById('step-2-icon').innerHTML = getSvgForIcon('calendar', 'w-6 h-6'); document.getElementById('step-3-icon').innerHTML = getSvgForIcon('clock', 'w-6 h-6'); document.getElementById('step-4-icon').innerHTML = getSvgForIcon('clock', 'w-6 h-6'); document.getElementById('step-5-icon').innerHTML = getSvgForIcon('map', 'w-6 h-6'); document.getElementById('step-weather-icon').innerHTML = getSvgForIcon('calendar', 'w-6 h-6'); } catch(e) {}
-    try{ var m=document.getElementById('tab-master-btn'), s=document.getElementById('tab-search-btn'); if(m&&m.innerHTML.indexOf('<svg')===-1)m.innerHTML=getSvgForIcon('list','w-7 h-7 shrink-0')+'<span>一覧</span>'; if(s&&s.innerHTML.indexOf('<svg')===-1)s.innerHTML=getSvgForIcon('search','w-7 h-7 shrink-0')+'<span>検索</span>'; }catch(e){}
-    try{ var nN=document.getElementById('nav-new-btn');if(nN)nN.onclick=function(e){e.preventDefault();window.goToFormScreen();}; var nB=document.getElementById('nav-back-btn');if(nB)nB.onclick=function(e){e.preventDefault();window.goToDeckScreen();}; [{id:'btn-next-1',a:1},{id:'btn-next-2',a:2},{id:'btn-next-3',a:3},{id:'btn-next-4',a:4},{id:'btn-next-route',a:5}].forEach(function(i){var b=document.getElementById(i.id);if(b)b.onclick=function(e){e.preventDefault();handlePanelButton(i.a);};}); var bM=document.getElementById('btn-master-reg');if(bM)bM.onclick=function(e){e.preventDefault();if(currentCandidate)handlePanelButton(1);}; var bS=document.getElementById('submit-btn');if(bS)bS.onclick=function(e){e.preventDefault();executeCompleteAutomation();}; var bW=document.querySelector('#step-weather .ok-btn');if(bW)bW.onclick=function(e){e.preventDefault();handlePanelButton('weather');}; }catch(e){}
+    
+    try {
+      document.getElementById('step-1-icon').innerHTML = window.getSvgForIcon('hospital', 'w-6 h-6 text-white');
+      document.getElementById('step-2-icon').innerHTML = window.getSvgForIcon('calendar', 'w-6 h-6 text-white');
+      document.getElementById('step-3-icon').innerHTML = window.getSvgForIcon('bus', 'w-6 h-6 text-white');
+      document.getElementById('step-4-icon').innerHTML = window.getSvgForIcon('teacup', 'w-6 h-6 text-white');
+      document.getElementById('step-5-icon').innerHTML = window.getSvgForIcon('map', 'w-6 h-6 text-white');
+      document.getElementById('step-weather-icon').innerHTML = window.getSvgForIcon('weather', 'w-6 h-6 text-white');
+    } catch(e) {}
+
+    window.buildBadgeLayouts();
+
+    try{ var m=document.getElementById('tab-master-btn'), s=document.getElementById('tab-search-btn'); if(m&&m.innerHTML.indexOf('<svg')===-1)m.innerHTML=window.getSvgForIcon('list','w-7 h-7 shrink-0')+'<span>一覧</span>'; if(s&&s.innerHTML.indexOf('<svg')===-1)s.innerHTML=window.getSvgForIcon('search','w-7 h-7 shrink-0')+'<span>検索</span>'; }catch(e){}
     
     window.loadDeckList();
 
